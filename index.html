@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gym Tracker</title>
     <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
     <div class="container">
@@ -48,6 +49,7 @@
         <section id="history">
             <h2>Workout History</h2>
             <button id="clear-history" style="display: none;">Clear History</button>
+            <canvas id="progress-chart" style="max-height: 300px; display: none;"></canvas>
             <div id="history-list" aria-live="polite"></div>
         </section>
     </div>
