@@ -1,160 +1,157 @@
-body {
-    font-family: Arial, sans-serif;
-    background-color: #f4f4f4;
-    margin: 0;
-    padding: 0;
-}
+// Pre-defined exercises and suggested routines
+const exerciseData = {
+    chest: {
+        exercises: ['Bench Press', 'Incline Bench Press', 'Chest Fly', 'Push-Ups'],
+        routine: [
+            { exercise: 'Bench Press', sets: 4, reps: 8 },
+            { exercise: 'Incline Bench Press', sets: 3, reps: 10 },
+            { exercise: 'Chest Fly', sets: 3, reps: 12 }
+        ]
+    },
+    back: {
+        exercises: ['Deadlift', 'Pull-Up', 'Bent-Over Row', 'Lat Pulldown'],
+        routine: [
+            { exercise: 'Deadlift', sets: 4, reps: 6 },
+            { exercise: 'Pull-Up', sets: 3, reps: 8 },
+            { exercise: 'Bent-Over Row', sets: 3, reps: 10 }
+        ]
+    },
+    legs: {
+        exercises: ['Squat', 'Leg Press', 'Lunges', 'Leg Curl'],
+        routine: [
+            { exercise: 'Squat', sets: 4, reps: 8 },
+            { exercise: 'Leg Press', sets: 3, reps: 10 },
+            { exercise: 'Lunges', sets: 3, reps: 12 }
+        ]
+    }
+};
 
-.container {
-    max-width: 800px;
-    margin: 50px auto;
-    padding: 20px;
-    background: white;
-    border-radius: 8px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-}
+// Load data from localStorage or initialize empty object
+let workoutData = JSON.parse(localStorage.getItem('workoutData')) || {};
 
-h1, h2 {
-    color: #333;
-}
+// DOM elements
+const workoutList = document.getElementById('workout-list');
+const exerciseInput = document.getElementById('exercise-input');
+const exerciseForm = document.getElementById('exercise-form');
+const exerciseName = document.getElementById('exercise-name');
+const numSets = document.getElementById('num-sets');
+const generateSetsBtn = document.getElementById('generate-sets');
+const setsContainer = document.getElementById('sets-container');
+const historyList = document.getElementById('history-list');
+const suggestedRoutine = document.getElementById('suggested-routine');
 
-section {
-    margin-bottom: 30px;
-}
+// Populate exercises and show routine when workout is selected
+workoutList.addEventListener('change', function () {
+    const selectedWorkout = workoutList.value;
+    exerciseName.innerHTML = '<option value="">-- Select an Exercise --</option>';
+    suggestedRoutine.innerHTML = '';
+    setsContainer.innerHTML = ''; // Clear any existing set inputs
 
-/* Form Styling */
-#exercise-form {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-}
+    if (selectedWorkout) {
+        exerciseInput.style.display = 'block';
 
-.form-group {
-    display: flex;
-    flex-direction: column;
-}
+        // Populate exercise dropdown
+        exerciseData[selectedWorkout].exercises.forEach(exercise => {
+            const option = document.createElement('option');
+            option.value = exercise;
+            option.textContent = exercise;
+            exerciseName.appendChild(option);
+        });
 
-    .form-group label {
-        font-weight: bold;
-        margin-bottom: 5px;
-        color: #333; /* Darker color for better contrast (accessibility) */
+        // Display suggested routine
+        suggestedRoutine.innerHTML = '<h3>Suggested Routine</h3>';
+        exerciseData[selectedWorkout].routine.forEach(item => {
+            const div = document.createElement('div');
+            div.className = 'routine-item';
+            div.textContent = `${item.exercise}: ${item.sets} sets x ${item.reps} reps`;
+            suggestedRoutine.appendChild(div);
+        });
+
+        displayHistory(selectedWorkout);
+    } else {
+        exerciseInput.style.display = 'none';
+        historyList.innerHTML = '';
+    }
+});
+
+// Generate set inputs dynamically with reps input
+generateSetsBtn.addEventListener('click', function () {
+    const num = parseInt(numSets.value);
+    if (isNaN(num) || num < 1) {
+        alert('Please enter a valid number of sets (at least 1)');
+        return;
     }
 
-    .form-group select,
-    .form-group input {
-        padding: 10px;
-        font-size: 16px;
-        border: 1px solid #ddd;
-        border-radius: 4px;
-        background-color: #fafafa;
-        transition: border-color 0.3s;
+    setsContainer.innerHTML = ''; // Clear existing set inputs
+    for (let i = 1; i <= num; i++) {
+        const setDiv = document.createElement('div');
+        setDiv.className = 'set-input';
+        setDiv.innerHTML = `
+            <label>Set ${i}:</label>
+            <input type="number" class="set-weight" min="0" step="0.5" placeholder="Weight (kg)" required>
+            <input type="number" class="set-reps" min="1" placeholder="Reps" required>
+        `;
+        setsContainer.appendChild(setDiv);
+    }
+});
+
+// Handle form submission
+exerciseForm.addEventListener('submit', function (e) {
+    e.preventDefault();
+
+    const workout = workoutList.value;
+    const exercise = exerciseName.value;
+    if (!exercise) {
+        alert('Please select an exercise');
+        return;
     }
 
-        .form-group select:focus,
-        .form-group input:focus {
-            border-color: #28a745;
-            border-width: 2px; /* Thicker border for better focus visibility (accessibility) */
-            outline: none;
-        }
+    const setWeights = Array.from(document.querySelectorAll('.set-weight'))
+        .map(input => parseFloat(input.value) || 0); // Get weights for each set
+    const setReps = Array.from(document.querySelectorAll('.set-reps'))
+        .map(input => parseInt(input.value) || 0); // Get reps for each set
+    const date = new Date().toLocaleDateString();
 
-button {
-    padding: 8px 16px; /* Reduced padding for smaller size */
-    background: linear-gradient(45deg, #28a745, #34d058); /* Gradient for modern look */
-    color: white;
-    border: none;
-    border-radius: 6px; /* Slightly larger radius for modern feel */
-    font-size: 14px; /* Smaller font size */
-    cursor: pointer;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Subtle shadow */
-    transition: background 0.3s, transform 0.1s, box-shadow 0.3s;
-}
-
-    button:hover {
-        background: linear-gradient(45deg, #218838, #28a745); /* Darker gradient on hover */
-        transform: translateY(-2px); /* Slight lift on hover */
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Enhanced shadow on hover */
+    if (setWeights.some(w => w < 0) || setReps.some(r => r < 0)) {
+        alert('Weights and reps must be non-negative');
+        return;
     }
 
-    button:active {
-        transform: translateY(0); /* Reset on click */
-        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1); /* Reduced shadow on click */
+    if (!workoutData[workout]) {
+        workoutData[workout] = [];
     }
 
-/* History and Routine Styling */
-#history-list, #suggested-routine {
-    margin-top: 15px;
-}
+    // Add exercise with set weights and reps to workout data
+    workoutData[workout].push({ exercise, sets: setWeights.map((w, i) => ({ weight: w, reps: setReps[i] })), date });
 
-.history-item, .routine-item {
-    padding: 12px;
-    border-bottom: 1px solid #eee;
-    background-color: #f9f9f9;
-    border-radius: 4px;
-    margin-bottom: 5px;
-    animation: fadeIn 0.5s ease-in; /* Fade-in animation for visual feedback */
-}
+    // Save to localStorage
+    localStorage.setItem('workoutData', JSON.stringify(workoutData));
 
-#suggested-routine {
-    padding: 15px;
-    background-color: #f0f0f0;
-    border-radius: 4px;
-}
+    // Provide feedback
+    alert('Exercise logged successfully!');
 
-    #suggested-routine h3 {
-        margin-top: 0;
-        font-size: 18px;
-        color: #444;
-    }
+    // Clear form
+    exerciseForm.reset();
+    setsContainer.innerHTML = ''; // Clear set inputs
 
-/* Set Inputs Styling */
-#sets-container {
-    margin-top: 15px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
+    // Update history display
+    displayHistory(workout);
+});
 
-.set-input {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-    .set-input label {
-        font-weight: bold;
-        color: #333; /* Darker color for better contrast (accessibility) */
-        width: 60px;
-    }
-
-    .set-input input {
-        padding: 10px;
-        font-size: 16px;
-        border: 1px solid #ddd;
-        border-radius: 4px;
-        background-color: #fafafa;
-        flex-grow: 1;
-    }
-
-        .set-input input:focus {
-            border-color: #28a745;
-            border-width: 2px; /* Thicker border for better focus visibility (accessibility) */
-            outline: none;
-        }
-
-/* Animation for History Items */
-@keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-}
-
-/* Responsive Design */
-@media (max-width: 600px) {
-    .container {
-        margin: 20px;
-        padding: 15px;
-    }
-    .set-input {
-        flex-direction: column;
-        align-items: flex-start;
+// Display workout history
+function displayHistory(workout) {
+    historyList.innerHTML = '';
+    if (workoutData[workout]) {
+        workoutData[workout].forEach(entry => {
+            const div = document.createElement('div');
+            div.className = 'history-item';
+            let historyText = `${entry.date}: ${entry.exercise} - `;
+            entry.sets.forEach((set, index) => {
+                historyText += `Set ${index + 1}: ${set.weight} kg x ${set.reps} reps`;
+                if (index < entry.sets.length - 1) historyText += ', ';
+            });
+            div.textContent = historyText;
+            historyList.appendChild(div);
+        });
     }
 }
