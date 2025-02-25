@@ -1,5 +1,5 @@
 // Pre-defined exercises
-const exerciseData = {
+const defaultExerciseData = {
     chest: {
         exercises: ['Bench Press', 'Incline Bench Press', 'Chest Fly', 'Push-Ups']
     },
@@ -11,6 +11,9 @@ const exerciseData = {
     }
 };
 
+// Load or initialize exercise data from localStorage
+let exerciseData = JSON.parse(localStorage.getItem('exerciseData')) || { ...defaultExerciseData };
+
 // Load data from localStorage or initialize empty object
 let workoutData = JSON.parse(localStorage.getItem('workoutData')) || {};
 
@@ -19,9 +22,11 @@ const workoutList = document.getElementById('workout-list');
 const exerciseInput = document.getElementById('exercise-input');
 const exerciseForm = document.getElementById('exercise-form');
 const exerciseName = document.getElementById('exercise-name');
-const numSets = document.getElementById('num-sets');
-const generateSetsBtn = document.getElementById('generate-sets');
+const customExerciseInput = document.getElementById('custom-exercise');
+const addCustomExerciseBtn = document.getElementById('add-custom-exercise');
 const setsContainer = document.getElementById('sets-container');
+const addSetBtn = document.getElementById('add-set');
+const removeSetBtn = document.getElementById('remove-set');
 const historyList = document.getElementById('history-list');
 const clearHistoryBtn = document.getElementById('clear-history');
 const progressChartCanvas = document.getElementById('progress-chart');
@@ -32,6 +37,7 @@ workoutList.addEventListener('change', function () {
     const selectedWorkout = workoutList.value;
     exerciseName.innerHTML = '<option value="">-- Select an Exercise --</option>';
     setsContainer.innerHTML = '';
+    customExerciseInput.value = '';
 
     if (selectedWorkout) {
         exerciseInput.style.display = 'block';
@@ -44,6 +50,7 @@ workoutList.addEventListener('change', function () {
             exerciseName.appendChild(option);
         });
 
+        generateSets(4); // Default to 4 sets
         displayHistory(selectedWorkout);
     } else {
         exerciseInput.style.display = 'none';
@@ -57,16 +64,32 @@ workoutList.addEventListener('change', function () {
     }
 });
 
-// Generate set inputs dynamically with reps input
-generateSetsBtn.addEventListener('click', function () {
-    const num = parseInt(numSets.value);
-    if (isNaN(num) || num < 1) {
-        alert('Please enter a valid number of sets (at least 1)');
-        return;
+// Add custom exercise
+addCustomExerciseBtn.addEventListener('click', function () {
+    const workout = workoutList.value;
+    const newExercise = customExerciseInput.value.trim();
+    if (newExercise && workout && !exerciseData[workout].exercises.includes(newExercise)) {
+        exerciseData[workout].exercises.push(newExercise);
+        localStorage.setItem('exerciseData', JSON.stringify(exerciseData));
+        
+        const option = document.createElement('option');
+        option.value = newExercise;
+        option.textContent = newExercise;
+        exerciseName.appendChild(option);
+        exerciseName.value = newExercise; // Auto-select the new exercise
+        customExerciseInput.value = '';
+        alert('Custom exercise added!');
+    } else if (!newExercise) {
+        alert('Please enter an exercise name');
+    } else {
+        alert('This exercise already exists');
     }
+});
 
+// Generate set inputs
+function generateSets(numSets) {
     setsContainer.innerHTML = '';
-    for (let i = 1; i <= num; i++) {
+    for (let i = 1; i <= numSets; i++) {
         const setDiv = document.createElement('div');
         setDiv.className = 'set-input';
         setDiv.innerHTML = `
@@ -75,6 +98,29 @@ generateSetsBtn.addEventListener('click', function () {
             <input type="number" class="set-reps" min="1" placeholder="Reps" required>
         `;
         setsContainer.appendChild(setDiv);
+    }
+}
+
+// Add set
+addSetBtn.addEventListener('click', function () {
+    const currentSets = setsContainer.children.length;
+    const setDiv = document.createElement('div');
+    setDiv.className = 'set-input';
+    setDiv.innerHTML = `
+        <label>Set ${currentSets + 1}:</label>
+        <input type="number" class="set-weight" min="0" step="0.5" placeholder="Weight (kg)" required>
+        <input type="number" class="set-reps" min="1" placeholder="Reps" required>
+    `;
+    setsContainer.appendChild(setDiv);
+});
+
+// Remove set
+removeSetBtn.addEventListener('click', function () {
+    const currentSets = setsContainer.children.length;
+    if (currentSets > 1) {
+        setsContainer.removeChild(setsContainer.lastChild);
+    } else {
+        alert('At least one set is required');
     }
 });
 
@@ -108,7 +154,8 @@ exerciseForm.addEventListener('submit', function (e) {
     localStorage.setItem('workoutData', JSON.stringify(workoutData));
     alert('Exercise logged successfully!');
     exerciseForm.reset();
-    setsContainer.innerHTML = '';
+    customExerciseInput.value = '';
+    generateSets(4); // Reset to 4 sets after submission
     displayHistory(workout);
 });
 
@@ -169,13 +216,13 @@ function displayHistory(workout) {
         if (Object.keys(progressData).length > 0) {
             progressChartCanvas.style.display = 'block';
             if (progressChart) {
-                progressChart.destroy(); // Destroy previous chart instance
+                progressChart.destroy();
             }
 
             const datasets = Object.entries(progressData).map(([exercise, data]) => ({
                 label: exercise,
                 data: data.map(d => ({ x: d.date, y: d.weight })),
-                borderColor: `hsl(${Math.random() * 360}, 70%, 50%)`, // Random color per exercise
+                borderColor: `hsl(${Math.random() * 360}, 70%, 50%)`,
                 fill: false,
                 tension: 0.1
             }));
@@ -240,37 +287,4 @@ function displayHistory(workout) {
 // Edit the last entry
 function editLastEntry(workout, index) {
     const entry = workoutData[workout][index];
-    exerciseName.value = entry.exercise;
-    numSets.value = entry.sets?.length || 0;
-    generateSetsBtn.click(); // Regenerate set inputs
-    
-    if (entry.sets && Array.isArray(entry.sets)) {
-        const weightInputs = document.querySelectorAll('.set-weight');
-        const repsInputs = document.querySelectorAll('.set-reps');
-        entry.sets.forEach((set, i) => {
-            weightInputs[i].value = set.weight;
-            repsInputs[i].value = set.reps;
-        });
-    }
-
-    // Remove the old entry when the form is submitted
-    exerciseForm.onsubmit = function (e) {
-        e.preventDefault();
-        workoutData[workout].splice(index, 1); // Remove old entry
-        const setWeights = Array.from(document.querySelectorAll('.set-weight'))
-            .map(input => parseFloat(input.value) || 0);
-        const setReps = Array.from(document.querySelectorAll('.set-reps'))
-            .map(input => parseInt(input.value) || 0);
-        workoutData[workout].push({
-            exercise: exerciseName.value,
-            sets: setWeights.map((w, i) => ({ weight: w, reps: setReps[i] })),
-            date: entry.date // Keep original date
-        });
-        localStorage.setItem('workoutData', JSON.stringify(workoutData));
-        alert('Entry updated successfully!');
-        exerciseForm.reset();
-        setsContainer.innerHTML = '';
-        displayHistory(workout);
-        exerciseForm.onsubmit = null; // Reset to default submit handler
-    };
-}
+    exercise
