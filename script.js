@@ -147,34 +147,46 @@ function displayHistory(workout) {
     historyList.innerHTML = '';
     clearHistoryBtn.style.display = workoutData[workout]?.length ? 'block' : 'none';
 
-    if (workoutData[workout]) {
+    if (workoutData[workout] && Array.isArray(workoutData[workout])) {
         // Calculate max weights per exercise
         const maxWeights = {};
         workoutData[workout].forEach(entry => {
-            entry.sets.forEach(set => {
-                if (!maxWeights[entry.exercise] || set.weight > maxWeights[entry.exercise]) {
-                    maxWeights[entry.exercise] = set.weight;
-                }
-            });
+            if (entry.sets && Array.isArray(entry.sets)) {
+                entry.sets.forEach(set => {
+                    if (!maxWeights[entry.exercise] || set.weight > maxWeights[entry.exercise]) {
+                        maxWeights[entry.exercise] = set.weight;
+                    }
+                });
+            } else {
+                console.warn(`Invalid entry detected in ${workout}:`, entry);
+            }
         });
 
         // Display max weights
-        const maxDiv = document.createElement('div');
-        maxDiv.className = 'history-item';
-        maxDiv.innerHTML = '<strong>Max Weights:</strong> ' + Object.entries(maxWeights)
-            .map(([ex, wt]) => `${ex}: ${wt} kg`)
-            .join(', ');
-        historyList.appendChild(maxDiv);
+        if (Object.keys(maxWeights).length > 0) {
+            const maxDiv = document.createElement('div');
+            maxDiv.className = 'history-item';
+            maxDiv.innerHTML = '<strong>Max Weights:</strong> ' + Object.entries(maxWeights)
+                .map(([ex, wt]) => `${ex}: ${wt} kg`)
+                .join(', ');
+            historyList.appendChild(maxDiv);
+        }
 
         // Display history entries
         workoutData[workout].forEach((entry, index) => {
             const div = document.createElement('div');
             div.className = 'history-item';
             let historyText = `${entry.date}: ${entry.exercise} - `;
-            entry.sets.forEach((set, i) => {
-                historyText += `Set ${i + 1}: ${set.weight} kg x ${set.reps} reps`;
-                if (i < entry.sets.length - 1) historyText += ', ';
-            });
+            
+            if (entry.sets && Array.isArray(entry.sets)) {
+                entry.sets.forEach((set, i) => {
+                    historyText += `Set ${i + 1}: ${set.weight} kg x ${set.reps} reps`;
+                    if (i < entry.sets.length - 1) historyText += ', ';
+                });
+            } else {
+                historyText += 'No set data available';
+            }
+            
             div.innerHTML = `<span>${historyText}</span>`;
             
             // Add edit button for the last entry
@@ -194,15 +206,17 @@ function displayHistory(workout) {
 function editLastEntry(workout, index) {
     const entry = workoutData[workout][index];
     exerciseName.value = entry.exercise;
-    numSets.value = entry.sets.length;
+    numSets.value = entry.sets?.length || 0;
     generateSetsBtn.click(); // Regenerate set inputs
     
-    const weightInputs = document.querySelectorAll('.set-weight');
-    const repsInputs = document.querySelectorAll('.set-reps');
-    entry.sets.forEach((set, i) => {
-        weightInputs[i].value = set.weight;
-        repsInputs[i].value = set.reps;
-    });
+    if (entry.sets && Array.isArray(entry.sets)) {
+        const weightInputs = document.querySelectorAll('.set-weight');
+        const repsInputs = document.querySelectorAll('.set-reps');
+        entry.sets.forEach((set, i) => {
+            weightInputs[i].value = set.weight;
+            repsInputs[i].value = set.reps;
+        });
+    }
 
     // Remove the old entry when the form is submitted
     exerciseForm.onsubmit = function (e) {
