@@ -1,28 +1,13 @@
-// Pre-defined exercises and suggested routines
+// Pre-defined exercises
 const exerciseData = {
     chest: {
-        exercises: ['Bench Press', 'Incline Bench Press', 'Chest Fly', 'Push-Ups'],
-        routine: [
-            { exercise: 'Bench Press', sets: 4, reps: 8 },
-            { exercise: 'Incline Bench Press', sets: 3, reps: 10 },
-            { exercise: 'Chest Fly', sets: 3, reps: 12 }
-        ]
+        exercises: ['Bench Press', 'Incline Bench Press', 'Chest Fly', 'Push-Ups']
     },
     back: {
-        exercises: ['Deadlift', 'Pull-Up', 'Bent-Over Row', 'Lat Pulldown'],
-        routine: [
-            { exercise: 'Deadlift', sets: 4, reps: 6 },
-            { exercise: 'Pull-Up', sets: 3, reps: 8 },
-            { exercise: 'Bent-Over Row', sets: 3, reps: 10 }
-        ]
+        exercises: ['Deadlift', 'Pull-Up', 'Bent-Over Row', 'Lat Pulldown']
     },
     legs: {
-        exercises: ['Squat', 'Leg Press', 'Lunges', 'Leg Curl'],
-        routine: [
-            { exercise: 'Squat', sets: 4, reps: 8 },
-            { exercise: 'Leg Press', sets: 3, reps: 10 },
-            { exercise: 'Lunges', sets: 3, reps: 12 }
-        ]
+        exercises: ['Squat', 'Leg Press', 'Lunges', 'Leg Curl']
     }
 };
 
@@ -38,14 +23,12 @@ const numSets = document.getElementById('num-sets');
 const generateSetsBtn = document.getElementById('generate-sets');
 const setsContainer = document.getElementById('sets-container');
 const historyList = document.getElementById('history-list');
-const suggestedRoutine = document.getElementById('suggested-routine');
 const clearHistoryBtn = document.getElementById('clear-history');
 
-// Populate exercises and show routine when workout is selected
+// Populate exercises when workout is selected
 workoutList.addEventListener('change', function () {
     const selectedWorkout = workoutList.value;
     exerciseName.innerHTML = '<option value="">-- Select an Exercise --</option>';
-    suggestedRoutine.innerHTML = '';
     setsContainer.innerHTML = '';
 
     if (selectedWorkout) {
@@ -57,15 +40,6 @@ workoutList.addEventListener('change', function () {
             option.value = exercise;
             option.textContent = exercise;
             exerciseName.appendChild(option);
-        });
-
-        // Display suggested routine
-        suggestedRoutine.innerHTML = '<h3>Suggested Routine</h3>';
-        exerciseData[selectedWorkout].routine.forEach(item => {
-            const div = document.createElement('div');
-            div.className = 'routine-item';
-            div.textContent = `${item.exercise}: ${item.sets} sets x ${item.reps} reps`;
-            suggestedRoutine.appendChild(div);
         });
 
         displayHistory(selectedWorkout);
