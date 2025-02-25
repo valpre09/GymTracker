@@ -13,12 +13,15 @@
         <!-- Workout Selection -->
         <section id="workout-selection">
             <h2>Select Workout</h2>
-            <select id="workout-list">
-                <option value="">-- Choose a Workout --</option>
-                <option value="chest">Chest Day</option>
-                <option value="back">Back Day</option>
-                <option value="legs">Leg Day</option>
-            </select>
+            <div class="form-group"> <!-- Wrapped in form-group for consistent styling -->
+                <label for="workout-list">Workout Type:</label> <!-- Added label for accessibility -->
+                <select id="workout-list" aria-label="Choose a workout">
+                    <option value="">-- Choose a Workout --</option>
+                    <option value="chest">Chest Day</option>
+                    <option value="back">Back Day</option>
+                    <option value="legs">Leg Day</option>
+                </select>
+            </div>
         </section>
 
         <!-- Exercise Input -->
@@ -27,25 +30,25 @@
             <form id="exercise-form">
                 <div class="form-group">
                     <label for="exercise-name">Exercise:</label>
-                    <select id="exercise-name" required>
+                    <select id="exercise-name" required aria-label="Select an exercise">
                         <option value="">-- Select an Exercise --</option>
                     </select>
                 </div>
                 <div class="form-group">
                     <label for="num-sets">Number of Sets:</label>
-                    <input type="number" id="num-sets" min="1" required>
+                    <input type="number" id="num-sets" min="1" required aria-label="Number of sets">
                     <button type="button" id="generate-sets">Generate Sets</button>
                 </div>
                 <div id="sets-container"></div>
                 <button type="submit">Add Exercise</button>
             </form>
-            <div id="suggested-routine"></div>
+            <div id="suggested-routine" aria-live="polite"></div> <!-- Added aria-live for accessibility -->
         </section>
 
         <!-- History Display -->
         <section id="history">
             <h2>Workout History</h2>
-            <div id="history-list"></div>
+            <div id="history-list" aria-live="polite"></div> <!-- Added aria-live for accessibility -->
         </section>
     </div>
     <script src="script.js"></script>
