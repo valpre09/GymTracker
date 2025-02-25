@@ -138,6 +138,29 @@ button {
             outline: none;
         }
 
+/* Set Controls */
+.set-controls {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+#add-set {
+    background: linear-gradient(45deg, #17a2b8, #40c4ff);
+}
+
+    #add-set:hover {
+        background: linear-gradient(45deg, #138496, #17a2b8);
+    }
+
+#remove-set {
+    background: linear-gradient(45deg, #ff9800, #ffb300);
+}
+
+    #remove-set:hover {
+        background: linear-gradient(45deg, #f57c00, #ff9800);
+    }
+
 /* Clear History Button */
 #clear-history {
     background: linear-gradient(45deg, #dc3545, #ff4d4d);
@@ -179,5 +202,8 @@ button {
         flex-direction: column;
         align-items: flex-start;
         gap: 5px;
+    }
+    .set-controls {
+        flex-direction: column;
     }
 }
