@@ -39,13 +39,14 @@ const generateSetsBtn = document.getElementById('generate-sets');
 const setsContainer = document.getElementById('sets-container');
 const historyList = document.getElementById('history-list');
 const suggestedRoutine = document.getElementById('suggested-routine');
+const clearHistoryBtn = document.getElementById('clear-history');
 
 // Populate exercises and show routine when workout is selected
 workoutList.addEventListener('change', function () {
     const selectedWorkout = workoutList.value;
     exerciseName.innerHTML = '<option value="">-- Select an Exercise --</option>';
     suggestedRoutine.innerHTML = '';
-    setsContainer.innerHTML = ''; // Clear any existing set inputs
+    setsContainer.innerHTML = '';
 
     if (selectedWorkout) {
         exerciseInput.style.display = 'block';
@@ -71,6 +72,7 @@ workoutList.addEventListener('change', function () {
     } else {
         exerciseInput.style.display = 'none';
         historyList.innerHTML = '';
+        clearHistoryBtn.style.display = 'none';
     }
 });
 
@@ -82,7 +84,7 @@ generateSetsBtn.addEventListener('click', function () {
         return;
     }
 
-    setsContainer.innerHTML = ''; // Clear existing set inputs
+    setsContainer.innerHTML = '';
     for (let i = 1; i <= num; i++) {
         const setDiv = document.createElement('div');
         setDiv.className = 'set-input';
@@ -107,9 +109,9 @@ exerciseForm.addEventListener('submit', function (e) {
     }
 
     const setWeights = Array.from(document.querySelectorAll('.set-weight'))
-        .map(input => parseFloat(input.value) || 0); // Get weights for each set
+        .map(input => parseFloat(input.value) || 0);
     const setReps = Array.from(document.querySelectorAll('.set-reps'))
-        .map(input => parseInt(input.value) || 0); // Get reps for each set
+        .map(input => parseInt(input.value) || 0);
     const date = new Date().toLocaleDateString();
 
     if (setWeights.some(w => w < 0) || setReps.some(r => r < 0)) {
@@ -121,37 +123,105 @@ exerciseForm.addEventListener('submit', function (e) {
         workoutData[workout] = [];
     }
 
-    // Add exercise with set weights and reps to workout data
     workoutData[workout].push({ exercise, sets: setWeights.map((w, i) => ({ weight: w, reps: setReps[i] })), date });
-
-    // Save to localStorage
     localStorage.setItem('workoutData', JSON.stringify(workoutData));
-
-    // Provide feedback
     alert('Exercise logged successfully!');
-
-    // Clear form
     exerciseForm.reset();
-    setsContainer.innerHTML = ''; // Clear set inputs
-
-    // Update history display
+    setsContainer.innerHTML = '';
     displayHistory(workout);
 });
 
-// Display workout history
+// Clear history
+clearHistoryBtn.addEventListener('click', function () {
+    const workout = workoutList.value;
+    if (confirm(`Are you sure you want to clear the history for ${workout}?`)) {
+        delete workoutData[workout];
+        localStorage.setItem('workoutData', JSON.stringify(workoutData));
+        displayHistory(workout);
+        alert('History cleared!');
+    }
+});
+
+// Display workout history with max weight and edit option
 function displayHistory(workout) {
     historyList.innerHTML = '';
+    clearHistoryBtn.style.display = workoutData[workout]?.length ? 'block' : 'none';
+
     if (workoutData[workout]) {
+        // Calculate max weights per exercise
+        const maxWeights = {};
         workoutData[workout].forEach(entry => {
+            entry.sets.forEach(set => {
+                if (!maxWeights[entry.exercise] || set.weight > maxWeights[entry.exercise]) {
+                    maxWeights[entry.exercise] = set.weight;
+                }
+            });
+        });
+
+        // Display max weights
+        const maxDiv = document.createElement('div');
+        maxDiv.className = 'history-item';
+        maxDiv.innerHTML = '<strong>Max Weights:</strong> ' + Object.entries(maxWeights)
+            .map(([ex, wt]) => `${ex}: ${wt} kg`)
+            .join(', ');
+        historyList.appendChild(maxDiv);
+
+        // Display history entries
+        workoutData[workout].forEach((entry, index) => {
             const div = document.createElement('div');
             div.className = 'history-item';
             let historyText = `${entry.date}: ${entry.exercise} - `;
-            entry.sets.forEach((set, index) => {
-                historyText += `Set ${index + 1}: ${set.weight} kg x ${set.reps} reps`;
-                if (index < entry.sets.length - 1) historyText += ', ';
+            entry.sets.forEach((set, i) => {
+                historyText += `Set ${i + 1}: ${set.weight} kg x ${set.reps} reps`;
+                if (i < entry.sets.length - 1) historyText += ', ';
             });
-            div.textContent = historyText;
+            div.innerHTML = `<span>${historyText}</span>`;
+            
+            // Add edit button for the last entry
+            if (index === workoutData[workout].length - 1) {
+                const editBtn = document.createElement('button');
+                editBtn.className = 'edit-btn';
+                editBtn.textContent = 'Edit';
+                editBtn.addEventListener('click', () => editLastEntry(workout, index));
+                div.appendChild(editBtn);
+            }
             historyList.appendChild(div);
         });
     }
+}
+
+// Edit the last entry
+function editLastEntry(workout, index) {
+    const entry = workoutData[workout][index];
+    exerciseName.value = entry.exercise;
+    numSets.value = entry.sets.length;
+    generateSetsBtn.click(); // Regenerate set inputs
+    
+    const weightInputs = document.querySelectorAll('.set-weight');
+    const repsInputs = document.querySelectorAll('.set-reps');
+    entry.sets.forEach((set, i) => {
+        weightInputs[i].value = set.weight;
+        repsInputs[i].value = set.reps;
+    });
+
+    // Remove the old entry when the form is submitted
+    exerciseForm.onsubmit = function (e) {
+        e.preventDefault();
+        workoutData[workout].splice(index, 1); // Remove old entry
+        const setWeights = Array.from(document.querySelectorAll('.set-weight'))
+            .map(input => parseFloat(input.value) || 0);
+        const setReps = Array.from(document.querySelectorAll('.set-reps'))
+            .map(input => parseInt(input.value) || 0);
+        workoutData[workout].push({
+            exercise: exerciseName.value,
+            sets: setWeights.map((w, i) => ({ weight: w, reps: setReps[i] })),
+            date: entry.date // Keep original date
+        });
+        localStorage.setItem('workoutData', JSON.stringify(workoutData));
+        alert('Entry updated successfully!');
+        exerciseForm.reset();
+        setsContainer.innerHTML = '';
+        displayHistory(workout);
+        exerciseForm.onsubmit = null; // Reset to default submit handler
+    };
 }
