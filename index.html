@@ -10,18 +10,32 @@
 <body>
     <div class="container">
         <h1>Gym Tracker</h1>
-        
-        <!-- Workout Selection -->
+
+        <!-- Timer Section -->
+        <section id="timer-section">
+            <h2>Workout Timer</h2>
+            <div id="timer-display">00:00:00</div>
+            <button id="start-timer">Start</button>
+            <button id="stop-timer" disabled>Stop</button>
+            <button id="reset-timer">Reset</button>
+        </section>
+
+        <!-- Workout Selection and Custom Workout -->
         <section id="workout-selection">
-            <h2>Select Workout</h2>
+            <h2>Select or Add Workout</h2>
             <div class="form-group">
                 <label for="workout-list">Workout Type:</label>
-                <select id="workout-list" aria-label="Choose a workout">
-                    <option value="">-- Choose a Workout --</option>
+                <select id="workout-list" aria-label="Choose a workout" multiple>
+                    <option value="">-- Choose Workouts --</option>
                     <option value="chest">Chest Day</option>
                     <option value="back">Back Day</option>
                     <option value="legs">Leg Day</option>
                 </select>
+            </div>
+            <div class="form-group">
+                <label for="custom-workout">Add Custom Workout:</label>
+                <input type="text" id="custom-workout" placeholder="Enter new workout">
+                <button type="button" id="add-custom-workout">Add</button>
             </div>
         </section>
 
@@ -50,11 +64,11 @@
         </section>
 
         <!-- History Display -->
-        <section id="history">
+        <section id="history-view">
             <h2>Workout History</h2>
-            <button id="clear-history" style="display: none;">Clear History</button>
+            <div id="history-summary"></div>
+            <div id="history-details" style="display: none;"></div>
             <canvas id="progress-chart" style="max-height: 300px; display: none;"></canvas>
-            <div id="history-list" aria-live="polite"></div>
         </section>
     </div>
     <script src="script.js"></script>
