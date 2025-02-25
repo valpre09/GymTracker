@@ -24,6 +24,8 @@ const generateSetsBtn = document.getElementById('generate-sets');
 const setsContainer = document.getElementById('sets-container');
 const historyList = document.getElementById('history-list');
 const clearHistoryBtn = document.getElementById('clear-history');
+const progressChartCanvas = document.getElementById('progress-chart');
+let progressChart = null; // Store chart instance
 
 // Populate exercises when workout is selected
 workoutList.addEventListener('change', function () {
@@ -47,6 +49,11 @@ workoutList.addEventListener('change', function () {
         exerciseInput.style.display = 'none';
         historyList.innerHTML = '';
         clearHistoryBtn.style.display = 'none';
+        progressChartCanvas.style.display = 'none';
+        if (progressChart) {
+            progressChart.destroy();
+            progressChart = null;
+        }
     }
 });
 
@@ -116,7 +123,7 @@ clearHistoryBtn.addEventListener('click', function () {
     }
 });
 
-// Display workout history with max weight and edit option
+// Display workout history with max weight, edit option, and progress graph
 function displayHistory(workout) {
     historyList.innerHTML = '';
     clearHistoryBtn.style.display = workoutData[workout]?.length ? 'block' : 'none';
@@ -146,6 +153,54 @@ function displayHistory(workout) {
             historyList.appendChild(maxDiv);
         }
 
+        // Prepare data for progress graph
+        const progressData = {};
+        workoutData[workout].forEach(entry => {
+            if (entry.sets && Array.isArray(entry.sets)) {
+                const maxWeight = Math.max(...entry.sets.map(set => set.weight));
+                if (!progressData[entry.exercise]) {
+                    progressData[entry.exercise] = [];
+                }
+                progressData[entry.exercise].push({ date: entry.date, weight: maxWeight });
+            }
+        });
+
+        // Display progress graph
+        if (Object.keys(progressData).length > 0) {
+            progressChartCanvas.style.display = 'block';
+            if (progressChart) {
+                progressChart.destroy(); // Destroy previous chart instance
+            }
+
+            const datasets = Object.entries(progressData).map(([exercise, data]) => ({
+                label: exercise,
+                data: data.map(d => ({ x: d.date, y: d.weight })),
+                borderColor: `hsl(${Math.random() * 360}, 70%, 50%)`, // Random color per exercise
+                fill: false,
+                tension: 0.1
+            }));
+
+            progressChart = new Chart(progressChartCanvas, {
+                type: 'line',
+                data: {
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        x: { type: 'time', time: { unit: 'day' }, title: { display: true, text: 'Date' } },
+                        y: { title: { display: true, text: 'Max Weight (kg)' } }
+                    },
+                    plugins: {
+                        legend: { display: true },
+                        title: { display: true, text: 'Progress Over Time' }
+                    }
+                }
+            });
+        } else {
+            progressChartCanvas.style.display = 'none';
+        }
+
         // Display history entries
         workoutData[workout].forEach((entry, index) => {
             const div = document.createElement('div');
@@ -173,6 +228,12 @@ function displayHistory(workout) {
             }
             historyList.appendChild(div);
         });
+    } else {
+        progressChartCanvas.style.display = 'none';
+        if (progressChart) {
+            progressChart.destroy();
+            progressChart = null;
+        }
     }
 }
 
