@@ -32,11 +32,11 @@ const resetTimerBtn = document.getElementById('reset-timer');
 let progressChart = null;
 let timerInterval = null;
 let timerSeconds = 0;
-let currentSession = { workouts: [], totalMass: 0, startTime: null };
+let currentSession = { workout: null, totalMass: 0, startTime: null };
 
 // Populate workouts
 function populateWorkoutList() {
-    workoutList.innerHTML = '<option value="">-- Choose Workouts --</option>';
+    workoutList.innerHTML = '<option value="">-- Choose a Workout --</option>';
     Object.keys(exerciseData).forEach(workout => {
         const option = document.createElement('option');
         option.value = workout;
@@ -46,18 +46,17 @@ function populateWorkoutList() {
 }
 populateWorkoutList();
 
-// Handle workout selection (multiple allowed)
+// Handle workout selection (single workout)
 workoutList.addEventListener('change', function () {
-    const selectedWorkouts = Array.from(workoutList.selectedOptions).map(opt => opt.value);
+    const selectedWorkout = workoutList.value;
     exerciseName.innerHTML = '<option value="">-- Select an Exercise --</option>';
     setsContainer.innerHTML = '';
     customExerciseInput.value = '';
-    currentSession.workouts = selectedWorkouts;
+    currentSession.workout = selectedWorkout;
 
-    if (selectedWorkouts.length > 0) {
+    if (selectedWorkout) {
         exerciseInput.style.display = 'block';
-        const allExercises = [...new Set(selectedWorkouts.flatMap(w => exerciseData[w].exercises))];
-        allExercises.forEach(exercise => {
+        exerciseData[selectedWorkout].exercises.forEach(exercise => {
             const option = document.createElement('option');
             option.value = exercise;
             option.textContent = exercise;
@@ -91,15 +90,12 @@ addCustomWorkoutBtn.addEventListener('click', function () {
 
 // Add custom exercise
 addCustomExerciseBtn.addEventListener('click', function () {
-    const selectedWorkouts = Array.from(workoutList.selectedOptions).map(opt => opt.value);
+    const workout = workoutList.value;
     const newExercise = customExerciseInput.value.trim();
-    if (newExercise && selectedWorkouts.length > 0) {
-        selectedWorkouts.forEach(workout => {
-            if (!exerciseData[workout].exercises.includes(newExercise)) {
-                exerciseData[workout].exercises.push(newExercise);
-            }
-        });
+    if (newExercise && workout && !exerciseData[workout].exercises.includes(newExercise)) {
+        exerciseData[workout].exercises.push(newExercise);
         localStorage.setItem('exerciseData', JSON.stringify(exerciseData));
+        
         const option = document.createElement('option');
         option.value = newExercise;
         option.textContent = newExercise;
@@ -110,7 +106,7 @@ addCustomExerciseBtn.addEventListener('click', function () {
     } else if (!newExercise) {
         alert('Please enter an exercise name');
     } else {
-        alert('Please select at least one workout');
+        alert('This exercise already exists');
     }
 });
 
@@ -156,10 +152,10 @@ removeSetBtn.addEventListener('click', function () {
 exerciseForm.addEventListener('submit', function (e) {
     e.preventDefault();
 
-    const selectedWorkouts = Array.from(workoutList.selectedOptions).map(opt => opt.value);
+    const workout = workoutList.value;
     const exercise = exerciseName.value;
-    if (!exercise || selectedWorkouts.length === 0) {
-        alert('Please select an exercise and at least one workout');
+    if (!exercise || !workout) {
+        alert('Please select an exercise and a workout');
         return;
     }
 
@@ -175,10 +171,8 @@ exerciseForm.addEventListener('submit', function (e) {
         return;
     }
 
-    selectedWorkouts.forEach(workout => {
-        if (!workoutData[workout]) workoutData[workout] = [];
-        workoutData[workout].push({ exercise, sets: setWeights.map((w, i) => ({ weight: w, reps: setReps[i] })), date });
-    });
+    if (!workoutData[workout]) workoutData[workout] = [];
+    workoutData[workout].push({ exercise, sets: setWeights.map((w, i) => ({ weight: w, reps: setReps[i] })), date });
     currentSession.totalMass += totalMass;
     localStorage.setItem('workoutData', JSON.stringify(workoutData));
     alert('Exercise logged successfully!');
@@ -212,15 +206,15 @@ stopTimerBtn.addEventListener('click', function () {
         timerInterval = null;
         startTimerBtn.disabled = false;
         stopTimerBtn.disabled = true;
-        if (currentSession.workouts.length > 0 && currentSession.totalMass > 0) {
+        if (currentSession.workout && currentSession.totalMass > 0) {
             sessionData.push({
-                workouts: [...currentSession.workouts],
+                workout: currentSession.workout,
                 totalMass: currentSession.totalMass,
                 duration: timerSeconds,
                 startTime: currentSession.startTime
             });
             localStorage.setItem('sessionData', JSON.stringify(sessionData));
-            currentSession = { workouts: [], totalMass: 0, startTime: null };
+            currentSession = { workout: null, totalMass: 0, startTime: null };
             displayHistorySummary();
         }
     }
@@ -235,7 +229,7 @@ resetTimerBtn.addEventListener('click', function () {
     timerDisplay.textContent = '00:00:00';
     startTimerBtn.disabled = false;
     stopTimerBtn.disabled = true;
-    currentSession = { workouts: [], totalMass: 0, startTime: null };
+    currentSession = { workout: null, totalMass: 0, startTime: null };
 });
 
 // Display history summary
@@ -252,7 +246,7 @@ function displayHistorySummary() {
         const div = document.createElement('div');
         div.className = 'summary-item';
         const duration = `${Math.floor(session.duration / 3600)}:${String(Math.floor((session.duration % 3600) / 60)).padStart(2, '0')}:${String(session.duration % 60).padStart(2, '0')}`;
-        div.innerHTML = `<span>${session.startTime} - ${session.workouts.join(', ')}: ${session.totalMass} kg, ${duration}</span>`;
+        div.innerHTML = `<span>${session.startTime} - ${session.workout.charAt(0).toUpperCase() + session.workout.slice(1)} Day: ${session.totalMass} kg, ${duration}</span>`;
         div.addEventListener('click', () => displayHistoryDetails(index));
         historySummary.appendChild(div);
     });
@@ -264,35 +258,31 @@ function displayHistoryDetails(sessionIndex) {
     historyDetails.innerHTML = '';
     historyDetails.style.display = 'block';
 
-    const workouts = session.workouts;
-    workouts.forEach(workout => {
-        if (workoutData[workout]) {
-            const workoutDiv = document.createElement('div');
-            workoutDiv.innerHTML = `<h3>${workout.charAt(0).toUpperCase() + workout.slice(1)}</h3>`;
-            workoutData[workout].filter(entry => entry.date === session.startTime.split(',')[0]).forEach(entry => {
-                const div = document.createElement('div');
-                div.className = 'history-item';
-                let text = `${entry.exercise} - `;
-                entry.sets.forEach((set, i) => {
-                    text += `Set ${i + 1}: ${set.weight} kg x ${set.reps} reps${i < entry.sets.length - 1 ? ', ' : ''}`;
-                });
-                div.textContent = text;
-                workoutDiv.appendChild(div);
+    const workout = session.workout;
+    if (workoutData[workout]) {
+        const workoutDiv = document.createElement('div');
+        workoutDiv.innerHTML = `<h3>${workout.charAt(0).toUpperCase() + workout.slice(1)} Day</h3>`;
+        workoutData[workout].filter(entry => entry.date === session.startTime.split(',')[0]).forEach(entry => {
+            const div = document.createElement('div');
+            div.className = 'history-item';
+            let text = `${entry.exercise} - `;
+            entry.sets.forEach((set, i) => {
+                text += `Set ${i + 1}: ${set.weight} kg x ${set.reps} reps${i < entry.sets.length - 1 ? ', ' : ''}`;
             });
-            historyDetails.appendChild(workoutDiv);
-        }
-    });
+            div.textContent = text;
+            workoutDiv.appendChild(div);
+        });
+        historyDetails.appendChild(workoutDiv);
+    }
 
     const progressData = {};
-    workouts.forEach(workout => {
-        if (workoutData[workout]) {
-            workoutData[workout].forEach(entry => {
-                if (!progressData[entry.exercise]) progressData[entry.exercise] = [];
-                const maxWeight = Math.max(...entry.sets.map(set => set.weight));
-                progressData[entry.exercise].push({ date: entry.date, weight: maxWeight });
-            });
-        }
-    });
+    if (workoutData[workout]) {
+        workoutData[workout].forEach(entry => {
+            if (!progressData[entry.exercise]) progressData[entry.exercise] = [];
+            const maxWeight = Math.max(...entry.sets.map(set => set.weight));
+            progressData[entry.exercise].push({ date: entry.date, weight: maxWeight });
+        });
+    }
 
     if (Object.keys(progressData).length > 0) {
         progressChartCanvas.style.display = 'block';
