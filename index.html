@@ -13,8 +13,8 @@
         <!-- Workout Selection -->
         <section id="workout-selection">
             <h2>Select Workout</h2>
-            <div class="form-group"> <!-- Wrapped in form-group for consistent styling -->
-                <label for="workout-list">Workout Type:</label> <!-- Added label for accessibility -->
+            <div class="form-group">
+                <label for="workout-list">Workout Type:</label>
                 <select id="workout-list" aria-label="Choose a workout">
                     <option value="">-- Choose a Workout --</option>
                     <option value="chest">Chest Day</option>
@@ -42,13 +42,14 @@
                 <div id="sets-container"></div>
                 <button type="submit">Add Exercise</button>
             </form>
-            <div id="suggested-routine" aria-live="polite"></div> <!-- Added aria-live for accessibility -->
+            <div id="suggested-routine" aria-live="polite"></div>
         </section>
 
         <!-- History Display -->
         <section id="history">
             <h2>Workout History</h2>
-            <div id="history-list" aria-live="polite"></div> <!-- Added aria-live for accessibility -->
+            <button id="clear-history" style="display: none;">Clear History</button>
+            <div id="history-list" aria-live="polite"></div>
         </section>
     </div>
     <script src="script.js"></script>
