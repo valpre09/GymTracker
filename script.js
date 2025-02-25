@@ -1,3 +1,5 @@
+console.log('Script loaded!');
+
 // Pre-defined exercises
 const defaultExerciseData = {
     chest: {
@@ -11,8 +13,15 @@ const defaultExerciseData = {
     }
 };
 
-// Load or initialize exercise data from localStorage
-let exerciseData = JSON.parse(localStorage.getItem('exerciseData')) || { ...defaultExerciseData };
+// Load or initialize exercise data from localStorage with fallback
+let exerciseData;
+try {
+    exerciseData = JSON.parse(localStorage.getItem('exerciseData')) || { ...defaultExerciseData };
+    console.log('exerciseData loaded:', exerciseData);
+} catch (e) {
+    console.warn('Failed to parse exerciseData from localStorage, using default:', e);
+    exerciseData = { ...defaultExerciseData };
+}
 
 // Load data from localStorage or initialize empty object
 let workoutData = JSON.parse(localStorage.getItem('workoutData')) || {};
@@ -35,20 +44,28 @@ let progressChart = null; // Store chart instance
 // Populate exercises when workout is selected
 workoutList.addEventListener('change', function () {
     const selectedWorkout = workoutList.value;
+    console.log('Workout selected:', selectedWorkout);
+    
     exerciseName.innerHTML = '<option value="">-- Select an Exercise --</option>';
     setsContainer.innerHTML = '';
     customExerciseInput.value = '';
 
     if (selectedWorkout) {
         exerciseInput.style.display = 'block';
+        console.log('Populating exercises for:', selectedWorkout);
 
         // Populate exercise dropdown
-        exerciseData[selectedWorkout].exercises.forEach(exercise => {
-            const option = document.createElement('option');
-            option.value = exercise;
-            option.textContent = exercise;
-            exerciseName.appendChild(option);
-        });
+        if (exerciseData[selectedWorkout] && exerciseData[selectedWorkout].exercises) {
+            exerciseData[selectedWorkout].exercises.forEach(exercise => {
+                const option = document.createElement('option');
+                option.value = exercise;
+                option.textContent = exercise;
+                exerciseName.appendChild(option);
+            });
+            console.log('Exercise dropdown populated');
+        } else {
+            console.warn(`No exercises found for ${selectedWorkout}`);
+        }
 
         generateSets(4); // Default to 4 sets
         displayHistory(selectedWorkout);
@@ -99,6 +116,7 @@ function generateSets(numSets) {
         `;
         setsContainer.appendChild(setDiv);
     }
+    console.log(`Generated ${numSets} sets`);
 }
 
 // Add set
@@ -287,4 +305,38 @@ function displayHistory(workout) {
 // Edit the last entry
 function editLastEntry(workout, index) {
     const entry = workoutData[workout][index];
-    exercise
+    exerciseName.value = entry.exercise;
+    setsContainer.innerHTML = ''; // Clear current sets
+    generateSets(entry.sets?.length || 4); // Load existing sets or default to 4
+    
+    if (entry.sets && Array.isArray(entry.sets)) {
+        const weightInputs = document.querySelectorAll('.set-weight');
+        const repsInputs = document.querySelectorAll('.set-reps');
+        entry.sets.forEach((set, i) => {
+            weightInputs[i].value = set.weight;
+            repsInputs[i].value = set.reps;
+        });
+    }
+
+    // Remove the old entry when the form is submitted
+    exerciseForm.onsubmit = function (e) {
+        e.preventDefault();
+        workoutData[workout].splice(index, 1); // Remove old entry
+        const setWeights = Array.from(document.querySelectorAll('.set-weight'))
+            .map(input => parseFloat(input.value) || 0);
+        const setReps = Array.from(document.querySelectorAll('.set-reps'))
+            .map(input => parseInt(input.value) || 0);
+        workoutData[workout].push({
+            exercise: exerciseName.value,
+            sets: setWeights.map((w, i) => ({ weight: w, reps: setReps[i] })),
+            date: entry.date
+        });
+        localStorage.setItem('workoutData', JSON.stringify(workoutData));
+        alert('Entry updated successfully!');
+        exerciseForm.reset();
+        customExerciseInput.value = '';
+        generateSets(4); // Reset to 4 sets after submission
+        displayHistory(workout);
+        exerciseForm.onsubmit = null; // Reset to default submit handler
+    };
+}
