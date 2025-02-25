@@ -6,7 +6,7 @@ body {
 }
 
 .container {
-    max-width: 800px;
+    max-width: 1000px;
     margin: 50px auto;
     padding: 20px;
     background: white;
@@ -22,8 +22,23 @@ section {
     margin-bottom: 30px;
 }
 
+/* Timer Styling */
+#timer-section {
+    text-align: center;
+}
+
+#timer-display {
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+#start-timer, #stop-timer, #reset-timer {
+    margin: 0 5px;
+}
+
 /* Form Styling */
-#exercise-form {
+#exercise-form, #workout-list {
     display: flex;
     flex-direction: column;
     gap: 15px;
@@ -49,6 +64,10 @@ section {
         background-color: #fafafa;
         transition: border-color 0.3s;
     }
+
+        .form-group select[multiple] {
+            height: 100px;
+        }
 
         .form-group select:focus,
         .form-group input:focus {
@@ -80,22 +99,33 @@ button {
         box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
     }
 
+    button:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+    }
+
 /* History Styling */
-#history-list {
+#history-summary, #history-details {
     margin-top: 15px;
 }
 
-.history-item {
+.history-item, .summary-item {
     padding: 12px;
     border-bottom: 1px solid #eee;
     background-color: #f9f9f9;
     border-radius: 4px;
     margin-bottom: 5px;
-    animation: fadeIn 0.5s ease-in;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    cursor: pointer;
 }
+
+    .history-item:hover, .summary-item:hover {
+        background-color: #f0f0f0;
+    }
 
 /* Chart Styling */
 #progress-chart {
@@ -161,27 +191,6 @@ button {
         background: linear-gradient(45deg, #f57c00, #ff9800);
     }
 
-/* Clear History Button */
-#clear-history {
-    background: linear-gradient(45deg, #dc3545, #ff4d4d);
-    margin-bottom: 15px;
-}
-
-    #clear-history:hover {
-        background: linear-gradient(45deg, #c82333, #dc3545);
-    }
-
-/* Edit Button */
-.edit-btn {
-    background: linear-gradient(45deg, #007bff, #339cff);
-    padding: 4px 8px;
-    font-size: 12px;
-}
-
-    .edit-btn:hover {
-        background: linear-gradient(45deg, #0062cc, #007bff);
-    }
-
 /* Animation for History Items */
 @keyframes fadeIn {
     from { opacity: 0; }
@@ -198,7 +207,7 @@ button {
         flex-direction: column;
         align-items: flex-start;
     }
-    .history-item {
+    .history-item, .summary-item {
         flex-direction: column;
         align-items: flex-start;
         gap: 5px;
