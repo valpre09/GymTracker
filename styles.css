@@ -123,6 +123,39 @@ button {
         background-color: #f0f0f0;
     }
 
+/* History Controls */
+.history-controls {
+    margin-bottom: 15px;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+#export-data {
+    background: linear-gradient(45deg, #28a745, #34d058);
+}
+
+    #export-data:hover {
+        background: linear-gradient(45deg, #218838, #28a745);
+    }
+
+#trigger-import {
+    background: linear-gradient(45deg, #007bff, #339cff);
+}
+
+    #trigger-import:hover {
+        background: linear-gradient(45deg, #0062cc, #007bff);
+    }
+
+#save-history {
+    background: linear-gradient(45deg, #007bff, #339cff);
+    margin-top: 10px;
+}
+
+    #save-history:hover {
+        background: linear-gradient(45deg, #0062cc, #007bff);
+    }
+
 /* Chart Styling */
 #progress-chart {
     margin-top: 15px;
@@ -187,16 +220,6 @@ button {
         background: linear-gradient(45deg, #f57c00, #ff9800);
     }
 
-/* Save to History Button */
-#save-history {
-    background: linear-gradient(45deg, #007bff, #339cff);
-    margin-top: 10px;
-}
-
-    #save-history:hover {
-        background: linear-gradient(45deg, #0062cc, #007bff);
-    }
-
 /* Animation for History Items */
 @keyframes fadeIn {
     from { opacity: 0; }
@@ -218,7 +241,7 @@ button {
         align-items: flex-start;
         gap: 5px;
     }
-    .set-controls {
+    .set-controls, .history-controls {
         flex-direction: column;
     }
 }
