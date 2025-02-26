@@ -8,7 +8,7 @@ const defaultExerciseData = {
 // Load or initialize data
 let exerciseData = JSON.parse(localStorage.getItem('exerciseData')) || { ...defaultExerciseData };
 let workoutData = JSON.parse(localStorage.getItem('workoutData')) || {};
-let sessionData = JSON.parse(localStorage.getItem('sessionData')) || []; // Store sessions with mass and time
+let sessionData = JSON.parse(localStorage.getItem('sessionData')) || [];
 
 // DOM elements
 const workoutList = document.getElementById('workout-list');
@@ -29,6 +29,7 @@ const timerDisplay = document.getElementById('timer-display');
 const startTimerBtn = document.getElementById('start-timer');
 const stopTimerBtn = document.getElementById('stop-timer');
 const resetTimerBtn = document.getElementById('reset-timer');
+const saveHistoryBtn = document.getElementById('save-history');
 let progressChart = null;
 let timerInterval = null;
 let timerSeconds = 0;
@@ -52,6 +53,7 @@ workoutList.addEventListener('change', function () {
     exerciseName.innerHTML = '<option value="">-- Select an Exercise --</option>';
     setsContainer.innerHTML = '';
     customExerciseInput.value = '';
+    saveHistoryBtn.style.display = selectedWorkout ? 'block' : 'none';
     currentSession.workout = selectedWorkout;
 
     if (selectedWorkout) {
@@ -148,7 +150,7 @@ removeSetBtn.addEventListener('click', function () {
     }
 });
 
-// Handle form submission
+// Handle form submission (save to history immediately)
 exerciseForm.addEventListener('submit', function (e) {
     e.preventDefault();
 
@@ -175,11 +177,36 @@ exerciseForm.addEventListener('submit', function (e) {
     workoutData[workout].push({ exercise, sets: setWeights.map((w, i) => ({ weight: w, reps: setReps[i] })), date });
     currentSession.totalMass += totalMass;
     localStorage.setItem('workoutData', JSON.stringify(workoutData));
+
+    // Optionally save to session if timer is running
+    if (timerInterval && currentSession.startTime) {
+        currentSession.totalMass = totalMass; // Reset for simplicity, could accumulate
+    }
+
     alert('Exercise logged successfully!');
     exerciseForm.reset();
     customExerciseInput.value = '';
     generateSets(4);
     displayHistorySummary();
+});
+
+// Save to history manually (without timer)
+saveHistoryBtn.addEventListener('click', function () {
+    if (currentSession.workout && currentSession.totalMass > 0) {
+        const date = new Date().toLocaleString();
+        sessionData.push({
+            workout: currentSession.workout,
+            totalMass: currentSession.totalMass,
+            duration: timerSeconds || 0,
+            startTime: date
+        });
+        localStorage.setItem('sessionData', JSON.stringify(sessionData));
+        currentSession = { workout: null, totalMass: 0, startTime: null };
+        displayHistorySummary();
+        alert('History saved manually!');
+    } else {
+        alert('No workout or mass logged to save.');
+    }
 });
 
 // Timer functions
@@ -232,8 +259,9 @@ resetTimerBtn.addEventListener('click', function () {
     currentSession = { workout: null, totalMass: 0, startTime: null };
 });
 
-// Display history summary
+// Display history summary (combine workout and session data)
 function displayHistorySummary() {
+    console.log('Displaying history summary, workoutData:', workoutData, 'sessionData:', sessionData);
     historySummary.innerHTML = '';
     historyDetails.style.display = 'none';
     if (progressChart) {
@@ -242,38 +270,65 @@ function displayHistorySummary() {
     }
     progressChartCanvas.style.display = 'none';
 
-    sessionData.forEach((session, index) => {
-        const div = document.createElement('div');
-        div.className = 'summary-item';
-        const duration = `${Math.floor(session.duration / 3600)}:${String(Math.floor((session.duration % 3600) / 60)).padStart(2, '0')}:${String(session.duration % 60).padStart(2, '0')}`;
-        div.innerHTML = `<span>${session.startTime} - ${session.workout.charAt(0).toUpperCase() + session.workout.slice(1)} Day: ${session.totalMass} kg, ${duration}</span>`;
-        div.addEventListener('click', () => displayHistoryDetails(index));
-        historySummary.appendChild(div);
+    // Show individual exercise logs
+    Object.keys(workoutData).forEach(workout => {
+        workoutData[workout].forEach(entry => {
+            const div = document.createElement('div');
+            div.className = 'summary-item';
+            let text = `${entry.date} - ${workout.charAt(0).toUpperCase() + workout.slice(1)} Day: ${entry.exercise}`;
+            const totalMass = entry.sets.reduce((sum, set) => sum + set.weight * set.reps, 0);
+            text += ` - ${totalMass} kg`;
+            div.innerHTML = `<span>${text}</span>`;
+            div.addEventListener('click', () => displayHistoryDetails(entry, workout));
+            historySummary.appendChild(div);
+        });
     });
+
+    // Show session summaries
+    if (sessionData.length > 0) {
+        sessionData.forEach((session, index) => {
+            const div = document.createElement('div');
+            div.className = 'summary-item';
+            const duration = `${Math.floor(session.duration / 3600)}:${String(Math.floor((session.duration % 3600) / 60)).padStart(2, '0')}:${String(session.duration % 60).padStart(2, '0')}`;
+            div.innerHTML = `<span>${session.startTime} - ${session.workout.charAt(0).toUpperCase() + session.workout.slice(1)} Day: ${session.totalMass} kg, ${duration}</span>`;
+            div.addEventListener('click', () => displayHistoryDetails(session, session.workout));
+            historySummary.appendChild(div);
+        });
+    } else {
+        const noData = document.createElement('div');
+        noData.textContent = 'No workout history available.';
+        historySummary.appendChild(noData);
+    }
 }
 
 // Display detailed history and graph
-function displayHistoryDetails(sessionIndex) {
-    const session = sessionData[sessionIndex];
+function displayHistoryDetails(data, workout) {
+    console.log('Displaying history details for:', data, 'workout:', workout);
     historyDetails.innerHTML = '';
     historyDetails.style.display = 'block';
 
-    const workout = session.workout;
-    if (workoutData[workout]) {
-        const workoutDiv = document.createElement('div');
-        workoutDiv.innerHTML = `<h3>${workout.charAt(0).toUpperCase() + workout.slice(1)} Day</h3>`;
-        workoutData[workout].filter(entry => entry.date === session.startTime.split(',')[0]).forEach(entry => {
-            const div = document.createElement('div');
-            div.className = 'history-item';
-            let text = `${entry.exercise} - `;
-            entry.sets.forEach((set, i) => {
-                text += `Set ${i + 1}: ${set.weight} kg x ${set.reps} reps${i < entry.sets.length - 1 ? ', ' : ''}`;
-            });
-            div.textContent = text;
-            workoutDiv.appendChild(div);
-        });
-        historyDetails.appendChild(workoutDiv);
+    let entries = [];
+    if (data.exercise) {
+        // Individual exercise log
+        entries = [data];
+    } else {
+        // Session data
+        entries = workoutData[workout]?.filter(entry => entry.date === data.startTime.split(',')[0]) || [];
     }
+
+    const workoutDiv = document.createElement('div');
+    workoutDiv.innerHTML = `<h3>${workout.charAt(0).toUpperCase() + workout.slice(1)} Day</h3>`;
+    entries.forEach(entry => {
+        const div = document.createElement('div');
+        div.className = 'history-item';
+        let text = `${entry.exercise} - `;
+        entry.sets.forEach((set, i) => {
+            text += `Set ${i + 1}: ${set.weight} kg x ${set.reps} reps${i < entry.sets.length - 1 ? ', ' : ''}`;
+        });
+        div.textContent = text;
+        workoutDiv.appendChild(div);
+    });
+    historyDetails.appendChild(workoutDiv);
 
     const progressData = {};
     if (workoutData[workout]) {
@@ -311,5 +366,7 @@ function displayHistoryDetails(sessionIndex) {
                 }
             }
         });
+    } else {
+        progressChartCanvas.style.display = 'none';
     }
 }
