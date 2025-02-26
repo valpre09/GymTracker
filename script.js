@@ -30,6 +30,9 @@ const startTimerBtn = document.getElementById('start-timer');
 const stopTimerBtn = document.getElementById('stop-timer');
 const resetTimerBtn = document.getElementById('reset-timer');
 const saveHistoryBtn = document.getElementById('save-history');
+const exportDataBtn = document.getElementById('export-data');
+const importDataInput = document.getElementById('import-data');
+const triggerImportBtn = document.getElementById('trigger-import');
 let progressChart = null;
 let timerInterval = null;
 let timerSeconds = 0;
@@ -370,3 +373,55 @@ function displayHistoryDetails(data, workout) {
         progressChartCanvas.style.display = 'none';
     }
 }
+
+// Export data
+exportDataBtn.addEventListener('click', function () {
+    const data = {
+        exerciseData: exerciseData,
+        workoutData: workoutData,
+        sessionData: sessionData
+    };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'gym_tracker_data.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+    alert('Data exported successfully!');
+});
+
+// Import data
+triggerImportBtn.addEventListener('click', function () {
+    importDataInput.click();
+});
+
+importDataInput.addEventListener('change', function (e) {
+    const file = e.target.files[0];
+    if (file && file.type === 'application/json') {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+            try {
+                const importedData = JSON.parse(e.target.result);
+                exerciseData = importedData.exerciseData || { ...defaultExerciseData };
+                workoutData = importedData.workoutData || {};
+                sessionData = importedData.sessionData || [];
+                localStorage.setItem('exerciseData', JSON.stringify(exerciseData));
+                localStorage.setItem('workoutData', JSON.stringify(workoutData));
+                localStorage.setItem('sessionData', JSON.stringify(sessionData));
+                populateWorkoutList();
+                displayHistorySummary();
+                alert('Data imported successfully!');
+            } catch (error) {
+                alert('Invalid data format. Please upload a valid JSON file.');
+                console.error('Import error:', error);
+            }
+        };
+        reader.readAsText(file);
+    } else {
+        alert('Please select a JSON file.');
+    }
+    e.target.value = ''; // Reset input to allow same file re-upload
+});
