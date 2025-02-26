@@ -187,6 +187,16 @@ button {
         background: linear-gradient(45deg, #f57c00, #ff9800);
     }
 
+/* Save to History Button */
+#save-history {
+    background: linear-gradient(45deg, #007bff, #339cff);
+    margin-top: 10px;
+}
+
+    #save-history:hover {
+        background: linear-gradient(45deg, #0062cc, #007bff);
+    }
+
 /* Animation for History Items */
 @keyframes fadeIn {
     from { opacity: 0; }
