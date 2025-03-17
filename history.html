@@ -1,27 +1,130 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
- <meta charset="UTF-8">
- <meta name="viewport" content="width=device-width, initial-scale=1.0">
- <title>Gym Tracker - History</title>
- <link rel="stylesheet" href="styles.css">
- <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-</head>
-<body>
- <nav class="navbar">
- <a href="index.html">Home</a>
- <a href="history.html" class="active">History</a>
- </nav>
- <div class="container">
- <h1>Workout History</h1>
+// Load data
+let workoutData = JSON.parse(localStorage.getItem('workoutData')) || {};
+let sessionData = JSON.parse(localStorage.getItem('sessionData')) || [];
 
- <!-- Full History Display -->
- <section id="full-history-view">
- <div id="full-history-summary"></div>
- <div id="full-history-details" style="display: none;"></div>
- <canvas id="full-progress-chart" style="max-height: 300px; display: none;"></canvas>
- </section>
- </div>
- <script src="history.js"></script>
-</body>
-</html>
+// DOM elements
+const historySummary = document.getElementById('full-history-summary');
+const historyDetails = document.getElementById('full-history-details');
+const progressChartCanvas = document.getElementById('full-progress-chart');
+let progressChart = null;
+
+// Display full history summary
+function displayHistorySummary() {
+    console.log('Displaying full history summary, workoutData:', workoutData, 'sessionData:', sessionData);
+    historySummary.innerHTML = '';
+    historyDetails.style.display = 'none';
+    if (progressChart) {
+        progressChart.destroy();
+        progressChart = null;
+    }
+    progressChartCanvas.style.display = 'none';
+
+    // Show individual exercise logs
+    let allEntries = [];
+    Object.keys(workoutData).forEach(workout => {
+        workoutData[workout].forEach(entry => {
+            allEntries.push({ workout, ...entry });
+        });
+    });
+    allEntries.sort((a, b) => new Date(b.date) - new Date(a.date));
+    allEntries.forEach(entry => {
+        const div = document.createElement('div');
+        div.className = 'summary-item';
+        let text = `${entry.date} - ${entry.workout.charAt(0).toUpperCase() + entry.workout.slice(1)} Day: ${entry.exercise}`;
+        const totalMass = entry.sets.reduce((sum, set) => sum + set.weight * set.reps, 0);
+        text += ` - ${totalMass} kg`;
+        div.innerHTML = `<span>${text}</span>`;
+        div.addEventListener('click', () => displayHistoryDetails(entry, entry.workout));
+        historySummary.appendChild(div);
+    });
+
+    // Show session summaries
+    if (sessionData.length > 0) {
+        sessionData.sort((a, b) => new Date(b.startTime) - new Date(a.startTime));
+        sessionData.forEach(session => {
+            const div = document.createElement('div');
+            div.className = 'summary-item';
+            const duration = `${Math.floor(session.duration / 3600)}:${String(Math.floor((session.duration % 3600) / 60)).padStart(2, '0')}:${String(session.duration % 60).padStart(2, '0')}`;
+            div.innerHTML = `<span>${session.startTime} - ${session.workout.charAt(0).toUpperCase() + session.workout.slice(1)} Day: ${session.totalMass} kg, ${duration}</span>`;
+            div.addEventListener('click', () => displayHistoryDetails(session, session.workout));
+            historySummary.appendChild(div);
+        });
+    }
+
+    if (allEntries.length === 0 && sessionData.length === 0) {
+        const noData = document.createElement('div');
+        noData.textContent = 'No workout history available.';
+        historySummary.appendChild(noData);
+    }
+}
+
+// Display detailed history and graph
+function displayHistoryDetails(data, workout) {
+    console.log('Displaying full history details for:', data, 'workout:', workout);
+    historyDetails.innerHTML = '';
+    historyDetails.style.display = 'block';
+
+    let entries = [];
+    if (data.exercise) {
+        entries = [data];
+    } else {
+        entries = workoutData[workout]?.filter(entry => entry.date === data.startTime.split(',')[0]) || [];
+    }
+
+    const workoutDiv = document.createElement('div');
+    workoutDiv.innerHTML = `<h3>${workout.charAt(0).toUpperCase() + workout.slice(1)} Day</h3>`;
+    entries.forEach(entry => {
+        const div = document.createElement('div');
+        div.className = 'history-item';
+        let text = `${entry.exercise} - `;
+        entry.sets.forEach((set, i) => {
+            text += `Set ${i + 1}: ${set.weight} kg x ${set.reps} reps${i < entry.sets.length - 1 ? ', ' : ''}`;
+        });
+        div.textContent = text;
+        workoutDiv.appendChild(div);
+    });
+    historyDetails.appendChild(workoutDiv);
+
+    const progressData = {};
+    if (workoutData[workout]) {
+        workoutData[workout].forEach(entry => {
+            if (!progressData[entry.exercise]) progressData[entry.exercise] = [];
+            const maxWeight = Math.max(...entry.sets.map(set => set.weight));
+            progressData[entry.exercise].push({ date: entry.date, weight: maxWeight });
+        });
+    }
+
+    if (Object.keys(progressData).length > 0) {
+        progressChartCanvas.style.display = 'block';
+        if (progressChart) progressChart.destroy();
+
+        const datasets = Object.entries(progressData).map(([exercise, data]) => ({
+            label: exercise,
+            data: data.map(d => ({ x: d.date, y: d.weight })),
+            borderColor: `hsl(${Math.random() * 360}, 70%, 50%)`,
+            fill: false,
+            tension: 0.1
+        }));
+
+        progressChart = new Chart(progressChartCanvas, {
+            type: 'line',
+            data: { datasets },
+            options: {
+                responsive: true,
+                scales: {
+                    x: { type: 'time', time: { unit: 'day' }, title: { display: true, text: 'Date' } },
+                    y: { title: { display: true, text: 'Max Weight (kg)' } }
+                },
+                plugins: {
+                    legend: { display: true },
+                    title: { display: true, text: 'Progress Over Time' }
+                }
+            }
+        });
+    } else {
+        progressChartCanvas.style.display = 'none';
+    }
+}
+
+// Initialize history page
+displayHistorySummary();
