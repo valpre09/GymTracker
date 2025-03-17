@@ -1,3 +1,23 @@
+// Pre-defined exercises by category (for reference, though not used directly here)
+const defaultExerciseData = {
+    chest: { exercises: ['Bench Press', 'Incline Bench Press', 'Chest Fly', 'Push-Ups'] },
+    back: { exercises: ['Deadlift', 'Pull-Up', 'Bent-Over Row', 'Lat Pulldown'] },
+    legs: { 
+        exercises: [
+            'Squat', 
+            'Leg Press', 
+            'Lunges', 
+            'Leg Curl', 
+            'Leg Extensions (Machine)', 
+            'Seated Leg Curls', 
+            'Squat Barbell', 
+            'Seated Calf Raises'
+        ]
+    },
+    arms: { exercises: ['Bicep Curl', 'Tricep Dip', 'Hammer Curl', 'Overhead Press'] },
+    core: { exercises: ['Plank', 'Russian Twist', 'Leg Raise', 'Crunches'] }
+};
+
 // Load data
 let workoutData = JSON.parse(localStorage.getItem('workoutData')) || {};
 let sessionData = JSON.parse(localStorage.getItem('sessionData')) || [];
