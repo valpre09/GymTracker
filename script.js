@@ -29,11 +29,6 @@ const historyTableBody = document.getElementById('history-table-body');
 const pbDisplay = document.getElementById('pb-display');
 const pbWeight = document.getElementById('pb-weight');
 const progressChartCanvas = document.getElementById('progress-chart');
-const timerDisplay = document.getElementById('timer-display');
-const startTimerBtn = document.getElementById('start-timer');
-const stopTimerBtn = document.getElementById('stop-timer');
-const resetTimerBtn = document.getElementById('reset-timer');
-const saveHistoryBtn = document.getElementById('save-history');
 let progressChart = null;
 let timerInterval = null;
 let timerSeconds = 0;
@@ -353,11 +348,13 @@ function displayHistorySummary(selectedExercise) {
         // Display progress chart
         const progressData = {};
         progressData[selectedExercise] = exerciseEntries.map(entry => ({
-            date: entry.date,
+            date: new Date(entry.date), // Ensure date is a Date object
             weight: Math.max(...entry.sets.map(set => set.weight))
         }));
 
-        if (progressData[selectedExercise].length > 0) {
+        console.log('Progress data for chart:', progressData);
+
+        if (progressData[selectedExercise].length > 1) { // Chart.js needs at least 2 data points to render a line
             progressChartCanvas.style.display = 'block';
             if (progressChart) progressChart.destroy();
 
@@ -375,8 +372,19 @@ function displayHistorySummary(selectedExercise) {
                 options: {
                     responsive: true,
                     scales: {
-                        x: { type: 'time', time: { unit: 'day' }, title: { display: true, text: 'Date' } },
-                        y: { title: { display: true, text: 'Max Weight (kg)' } }
+                        x: { 
+                            type: 'time',
+                            time: { 
+                                unit: 'day',
+                                parser: 'MM/DD/YYYY', // Match the date format in localStorage
+                                displayFormats: { day: 'MM/DD/YYYY' }
+                            },
+                            title: { display: true, text: 'Date' }
+                        },
+                        y: { 
+                            title: { display: true, text: 'Max Weight (kg)' },
+                            beginAtZero: true
+                        }
                     },
                     plugins: {
                         legend: { display: true },
@@ -384,6 +392,9 @@ function displayHistorySummary(selectedExercise) {
                     }
                 }
             });
+        } else {
+            console.log('Not enough data points to render chart (need at least 2).');
+            progressChartCanvas.style.display = 'none';
         }
     } else {
         historyTableBody.innerHTML = '<tr><td colspan="3">No history available for this exercise.</td></tr>';
