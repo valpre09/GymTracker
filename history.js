@@ -110,8 +110,8 @@ function displayHistorySummary() {
                             type: 'time',
                             time: { 
                                 unit: 'day',
-                                parser: 'MM/DD/YYYY',
-                                displayFormats: { day: 'MM/DD/YYYY' }
+                                parser: 'MM/dd/yyyy', // Updated to use 'dd' instead of 'DD'
+                                displayFormats: { day: 'MM/dd/yyyy' } // Updated to use 'dd' instead of 'DD'
                             },
                             title: { display: true, text: 'Date' }
                         },
