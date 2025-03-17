@@ -1,247 +1,180 @@
 body {
-    font-family: Arial, sans-serif;
-    background-color: #f4f4f4;
-    margin: 0;
-    padding: 0;
+ font-family: Arial, sans-serif;
+ background-color: #f4f4f4;
+ margin: 0;
+ padding: 0;
+}
+
+/* Navbar Styling */
+.navbar {
+ background: linear-gradient(45deg, #28a745, #34d058);
+ padding: 10px 0;
+ box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.navbar a {
+ color: white;
+ text-decoration: none;
+ padding: 10px 20px;
+ display: inline-block;
+ font-size: 16px;
+ transition: background 0.3s;
+}
+
+.navbar a:hover {
+ background: rgba(255, 255, 255, 0.2);
+}
+
+.navbar a.active {
+ background: rgba(255, 255, 255, 0.3);
 }
 
 .container {
-    max-width: 1000px;
-    margin: 50px auto;
-    padding: 20px;
-    background: white;
-    border-radius: 8px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+ max-width: 1000px;
+ margin: 20px auto;
+ padding: 20px;
+ background: white;
+ border-radius: 8px;
+ box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }
 
 h1, h2 {
-    color: #333;
+ color: #333;
 }
 
 section {
-    margin-bottom: 30px;
+ margin-bottom: 30px;
 }
 
 /* Timer Styling */
 #timer-section {
-    text-align: center;
+ text-align: center;
 }
 
 #timer-display {
-    font-size: 24px;
-    font-weight: bold;
-    margin-bottom: 10px;
+ font-size: 24px;
+ font-weight: bold;
+ margin-bottom: 10px;
 }
 
 #start-timer, #stop-timer, #reset-timer {
-    margin: 0 5px;
+ margin: 0 5px;
 }
 
 /* Form Styling */
 #exercise-form, #workout-list {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
+ display: flex;
+ flex-direction: column;
+ gap: 15px;
 }
 
 .form-group {
-    display: flex;
-    flex-direction: column;
+ display: flex;
+ flex-direction: column;
 }
 
-    .form-group label {
-        font-weight: bold;
-        margin-bottom: 5px;
-        color: #333;
-    }
+ .form-group label {
+ font-weight: bold;
+ margin-bottom: 5px;
+ color: #333;
+ }
 
-    .form-group select,
-    .form-group input {
-        padding: 10px;
-        font-size: 16px;
-        border: 1px solid #ddd;
-        border-radius: 4px;
-        background-color: #fafafa;
-        transition: border-color 0.3s;
-    }
+ .form-group select,
+ .form-group input {
+ padding: 10px;
+ font-size: 16px;
+ border: 1px solid #ddd;
+ border-radius: 4px;
+ background-color: #fafafa;
+ transition: border-color 0.3s;
+ }
 
-        .form-group select:focus,
-        .form-group input:focus {
-            border-color: #28a745;
-            border-width: 2px;
-            outline: none;
-        }
+ .form-group select:focus,
+ .form-group input:focus {
+ border-color: #28a745;
+ border-width: 2px;
+ outline: none;
+ }
 
 button {
-    padding: 8px 16px;
-    background: linear-gradient(45deg, #28a745, #34d058);
-    color: white;
-    border: none;
-    border-radius: 6px;
-    font-size: 14px;
-    cursor: pointer;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    transition: background 0.3s, transform 0.1s, box-shadow 0.3s;
+ padding: 8px 16px;
+ background: linear-gradient(45deg, #28a745, #34d058);
+ color: white;
+ border: none;
+ border-radius: 6px;
+ font-size: 14px;
+ cursor: pointer;
+ box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+ transition: background 0.3s, transform 0.1s, box-shadow 0.3s;
 }
 
-    button:hover {
-        background: linear-gradient(45deg, #218838, #28a745);
-        transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    }
+ button:hover {
+ background: linear-gradient(45deg, #218838, #28a745);
+ transform: translateY(-2px);
+ box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+ }
 
-    button:active {
-        transform: translateY(0);
-        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-    }
+ button:active {
+ transform: translateY(0);
+ box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+ }
 
-    button:disabled {
-        background: #ccc;
-        cursor: not-allowed;
-        transform: none;
-        box-shadow: none;
-    }
+ button:disabled {
+ background: #ccc;
+ cursor: not-allowed;
+ transform: none;
+ box-shadow: none;
+ }
 
 /* History Styling */
-#history-summary, #history-details {
-    margin-top: 15px;
+#history-summary, #history-details, #full-history-summary, #full-history-details {
+ margin-top: 15px;
 }
 
 .history-item, .summary-item {
-    padding: 12px;
-    border-bottom: 1px solid #eee;
-    background-color: #f9f9f9;
-    border-radius: 4px;
-    margin-bottom: 5px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    cursor: pointer;
+ padding: 12px;
+ border-bottom: 1px solid #eee;
+ background-color: #f9f9f9;
+ border-radius: 4px;
+ margin-bottom: 5px;
+ display: flex;
+ justify-content: space-between;
+ align-items: center;
+ cursor: pointer;
 }
 
-    .history-item:hover, .summary-item:hover {
-        background-color: #f0f0f0;
-    }
-
-/* History Controls */
-.history-controls {
-    margin-bottom: 15px;
-    display: flex;
-    gap: 10px;
-    align-items: center;
-}
-
-#export-data {
-    background: linear-gradient(45deg, #28a745, #34d058);
-}
-
-    #export-data:hover {
-        background: linear-gradient(45deg, #218838, #28a745);
-    }
-
-#trigger-import {
-    background: linear-gradient(45deg, #007bff, #339cff);
-}
-
-    #trigger-import:hover {
-        background: linear-gradient(45deg, #0062cc, #007bff);
-    }
-
-#save-history {
-    background: linear-gradient(45deg, #007bff, #339cff);
-    margin-top: 10px;
-}
-
-    #save-history:hover {
-        background: linear-gradient(45deg, #0062cc, #007bff);
-    }
+ .history-item:hover, .summary-item:hover {
+ background-color: #f0f0f0;
+ }
 
 /* Chart Styling */
-#progress-chart {
-    margin-top: 15px;
-    margin-bottom: 15px;
+#progress-chart, #full-progress-chart {
+ margin-top: 15px;
+ margin-bottom: 15px;
 }
 
 /* Set Inputs Styling */
 #sets-container {
-    margin-top: 15px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
+ margin-top: 15px;
+ display: flex;
+ flex-direction: column;
+ gap: 10px;
 }
 
 .set-input {
-    display: flex;
-    align-items: center;
-    gap: 10px;
+ display: flex;
+ align-items: center;
+ gap: 10px;
 }
 
-    .set-input label {
-        font-weight: bold;
-        color: #333;
-        width: 60px;
-    }
+ .set-input label {
+ font-weight: bold;
+ color: #333;
+ width: 60px;
+ }
 
-    .set-input input {
-        padding: 10px;
-        font-size: 16px;
-        border: 1px solid #ddd;
-        border-radius: 4px;
-        background-color: #fafafa;
-        flex-grow: 1;
-    }
-
-        .set-input input:focus {
-            border-color: #28a745;
-            border-width: 2px;
-            outline: none;
-        }
-
-/* Set Controls */
-.set-controls {
-    display: flex;
-    gap: 10px;
-    margin-top: 10px;
-}
-
-#add-set {
-    background: linear-gradient(45deg, #17a2b8, #40c4ff);
-}
-
-    #add-set:hover {
-        background: linear-gradient(45deg, #138496, #17a2b8);
-    }
-
-#remove-set {
-    background: linear-gradient(45deg, #ff9800, #ffb300);
-}
-
-    #remove-set:hover {
-        background: linear-gradient(45deg, #f57c00, #ff9800);
-    }
-
-/* Animation for History Items */
-@keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-}
-
-/* Responsive Design */
-@media (max-width: 600px) {
-    .container {
-        margin: 20px;
-        padding: 15px;
-    }
-    .set-input {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-    .history-item, .summary-item {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 5px;
-    }
-    .set-controls, .history-controls {
-        flex-direction: column;
-    }
-}
+ .set-input input {
+ padding: 10px;
+ font-size: 16px;
+ border: 1px solid #ddd;
+ border-radius: 4px;
