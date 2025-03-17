@@ -40,6 +40,7 @@ let currentSession = { workout: null, totalMass: 0, startTime: null };
 // Populate workouts
 function populateWorkoutList() {
     workoutList.innerHTML = '<option value="">-- Choose a Workout --</option>';
+    console.log('Populating workout list with exerciseData:', exerciseData);
     Object.keys(exerciseData).forEach(workout => {
         const option = document.createElement('option');
         option.value = workout;
@@ -51,6 +52,7 @@ populateWorkoutList();
 
 // Handle workout selection (single workout)
 workoutList.addEventListener('change', function () {
+    console.log('Workout changed to:', workoutList.value);
     const selectedWorkout = workoutList.value;
     exerciseName.innerHTML = '<option value="">-- Select an Exercise --</option>';
     setsContainer.innerHTML = '';
@@ -58,7 +60,8 @@ workoutList.addEventListener('change', function () {
     saveHistoryBtn.style.display = selectedWorkout ? 'block' : 'none';
     currentSession.workout = selectedWorkout;
 
-    if (selectedWorkout) {
+    if (selectedWorkout && exerciseData[selectedWorkout]) {
+        console.log('Populating exercises for:', selectedWorkout, 'with:', exerciseData[selectedWorkout].exercises);
         exerciseInput.style.display = 'block';
         exerciseData[selectedWorkout].exercises.forEach(exercise => {
             const option = document.createElement('option');
@@ -69,6 +72,7 @@ workoutList.addEventListener('change', function () {
         generateSets(4);
     } else {
         exerciseInput.style.display = 'none';
+        console.log('No exercises available for:', selectedWorkout);
     }
     displayHistorySummary();
 });
