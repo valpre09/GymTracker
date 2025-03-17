@@ -27,7 +27,7 @@ let sessionData = JSON.parse(localStorage.getItem('sessionData')) || [];
 const workoutList = document.getElementById('workout-list');
 const exerciseInput = document.getElementById('exercise-input');
 const exerciseForm = document.getElementById('exercise-form');
-const exerciseName = document.getElementById('exercise-name');
+const exerciseName = document.getElementById('exercise-name'); // Ensure this matches the ID
 const customExerciseInput = document.getElementById('custom-exercise');
 const addCustomExerciseBtn = document.getElementById('add-custom-exercise');
 const customWorkoutInput = document.getElementById('custom-workout');
@@ -40,6 +40,20 @@ const historyTableBody = document.getElementById('history-table-body');
 const pbDisplay = document.getElementById('pb-display');
 const pbWeight = document.getElementById('pb-weight');
 const progressChartCanvas = document.getElementById('progress-chart');
+const timerDisplay = document.getElementById('timer-display');
+const startTimerBtn = document.getElementById('start-timer');
+const stopTimerBtn = document.getElementById('stop-timer');
+const resetTimerBtn = document.getElementById('reset-timer');
+const saveHistoryBtn = document.getElementById('save-history');
+
+// Verify DOM elements are found
+console.log('DOM Elements:', {
+    workoutList, exerciseInput, exerciseName, exerciseForm, customExerciseInput, addCustomExerciseBtn,
+    customWorkoutInput, addCustomWorkoutBtn, setsContainer, addSetBtn, removeSetBtn, historySummary,
+    historyTableBody, pbDisplay, pbWeight, progressChartCanvas, timerDisplay, startTimerBtn,
+    stopTimerBtn, resetTimerBtn, saveHistoryBtn
+});
+
 let progressChart = null;
 let timerInterval = null;
 let timerSeconds = 0;
@@ -60,9 +74,9 @@ populateWorkoutList();
 
 // Handle workout selection (single workout)
 workoutList.addEventListener('change', function () {
-    console.log('Workout changed to:', workoutList.value);
+    console.log('Workout selection changed to:', workoutList.value);
     const selectedWorkout = workoutList.value;
-    exerciseName.innerHTML = '<option value="">-- Select an Exercise --</option>';
+    exerciseName.innerHTML = '<option value="">-- Select an Exercise --</option>'; // Reset dropdown
     setsContainer.innerHTML = '';
     customExerciseInput.value = '';
     saveHistoryBtn.style.display = selectedWorkout ? 'block' : 'none';
@@ -71,11 +85,13 @@ workoutList.addEventListener('change', function () {
     if (selectedWorkout && exerciseData[selectedWorkout]) {
         console.log('Populating exercises for:', selectedWorkout, 'with:', exerciseData[selectedWorkout].exercises);
         exerciseInput.style.display = 'block';
+        exerciseName.innerHTML = '<option value="">-- Select an Exercise --</option>'; // Clear previous options
         exerciseData[selectedWorkout].exercises.forEach(exercise => {
             const option = document.createElement('option');
             option.value = exercise;
             option.textContent = exercise;
             exerciseName.appendChild(option);
+            console.log('Added exercise option:', exercise); // Debug log
         });
         generateSets(4);
     } else {
