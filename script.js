@@ -25,7 +25,9 @@ const setsContainer = document.getElementById('sets-container');
 const addSetBtn = document.getElementById('add-set');
 const removeSetBtn = document.getElementById('remove-set');
 const historySummary = document.getElementById('history-summary');
-const historyDetails = document.getElementById('history-details');
+const historyTableBody = document.getElementById('history-table-body');
+const pbDisplay = document.getElementById('pb-display');
+const pbWeight = document.getElementById('pb-weight');
 const progressChartCanvas = document.getElementById('progress-chart');
 const timerDisplay = document.getElementById('timer-display');
 const startTimerBtn = document.getElementById('start-timer');
@@ -74,7 +76,21 @@ workoutList.addEventListener('change', function () {
         exerciseInput.style.display = 'none';
         console.log('No exercises available for:', selectedWorkout);
     }
-    displayHistorySummary();
+    // Clear history when changing workout
+    historyTableBody.innerHTML = '';
+    pbDisplay.style.display = 'none';
+    if (progressChart) {
+        progressChart.destroy();
+        progressChart = null;
+    }
+    progressChartCanvas.style.display = 'none';
+});
+
+// Handle exercise selection (filter history dynamically)
+exerciseName.addEventListener('change', function () {
+    const selectedExercise = exerciseName.value;
+    console.log('Exercise changed to:', selectedExercise);
+    displayHistorySummary(selectedExercise);
 });
 
 // Add custom workout
@@ -111,6 +127,7 @@ addCustomExerciseBtn.addEventListener('click', function () {
         exerciseName.value = newExercise;
         customExerciseInput.value = '';
         alert('Custom exercise added!');
+        displayHistorySummary(newExercise); // Update history for the new exercise
     } else if (!newExercise) {
         alert('Please enter an exercise name');
     } else {
@@ -118,7 +135,7 @@ addCustomExerciseBtn.addEventListener('click', function () {
     }
 });
 
-// Generate set inputs
+// Generate set inputs with checkboxes
 function generateSets(numSets) {
     setsContainer.innerHTML = '';
     for (let i = 1; i <= numSets; i++) {
@@ -128,6 +145,8 @@ function generateSets(numSets) {
             <label>Set ${i}:</label>
             <input type="number" class="set-weight" min="0" step="0.5" placeholder="Weight (kg)" required>
             <input type="number" class="set-reps" min="1" placeholder="Reps" required>
+            <input type="checkbox" class="set-checkbox" id="set-checkbox-${i}">
+            <label for="set-checkbox-${i}" class="set-checkbox-label">Save this set</label>
         `;
         setsContainer.appendChild(setDiv);
     }
@@ -142,6 +161,8 @@ addSetBtn.addEventListener('click', function () {
         <label>Set ${currentSets + 1}:</label>
         <input type="number" class="set-weight" min="0" step="0.5" placeholder="Weight (kg)" required>
         <input type="number" class="set-reps" min="1" placeholder="Reps" required>
+        <input type="checkbox" class="set-checkbox" id="set-checkbox-${currentSets + 1}">
+        <label for="set-checkbox-${currentSets + 1}" class="set-checkbox-label">Save this set</label>
     `;
     setsContainer.appendChild(setDiv);
 });
@@ -156,7 +177,7 @@ removeSetBtn.addEventListener('click', function () {
     }
 });
 
-// Handle form submission (save to history immediately)
+// Handle form submission (save only checked sets)
 exerciseForm.addEventListener('submit', function (e) {
     e.preventDefault();
 
@@ -171,16 +192,33 @@ exerciseForm.addEventListener('submit', function (e) {
         .map(input => parseFloat(input.value) || 0);
     const setReps = Array.from(document.querySelectorAll('.set-reps'))
         .map(input => parseInt(input.value) || 0);
+    const setCheckboxes = Array.from(document.querySelectorAll('.set-checkbox'))
+        .map(checkbox => checkbox.checked);
     const date = new Date().toLocaleDateString();
-    const totalMass = setWeights.reduce((sum, weight, i) => sum + weight * setReps[i], 0);
 
+    // Validate inputs
     if (setWeights.some(w => w < 0) || setReps.some(r => r < 0)) {
         alert('Weights and reps must be non-negative');
         return;
     }
 
+    // Only save checked sets
+    const setsToSave = [];
+    let totalMass = 0;
+    setWeights.forEach((weight, i) => {
+        if (setCheckboxes[i]) {
+            setsToSave.push({ weight, reps: setReps[i] });
+            totalMass += weight * setReps[i];
+        }
+    });
+
+    if (setsToSave.length === 0) {
+        alert('Please check at least one set to save.');
+        return;
+    }
+
     if (!workoutData[workout]) workoutData[workout] = [];
-    workoutData[workout].push({ exercise, sets: setWeights.map((w, i) => ({ weight: w, reps: setReps[i] })), date });
+    workoutData[workout].push({ exercise, sets: setsToSave, date });
     currentSession.totalMass += totalMass;
     localStorage.setItem('workoutData', JSON.stringify(workoutData));
 
@@ -188,11 +226,11 @@ exerciseForm.addEventListener('submit', function (e) {
         currentSession.totalMass = totalMass; // Reset for simplicity, could accumulate
     }
 
-    alert('Exercise logged successfully!');
+    alert('Exercise saved successfully!');
     exerciseForm.reset();
     customExerciseInput.value = '';
     generateSets(4);
-    displayHistorySummary();
+    displayHistorySummary(exercise); // Update history for the selected exercise
 });
 
 // Save to history manually (without timer)
@@ -207,7 +245,7 @@ saveHistoryBtn.addEventListener('click', function () {
         });
         localStorage.setItem('sessionData', JSON.stringify(sessionData));
         currentSession = { workout: null, totalMass: 0, startTime: null };
-        displayHistorySummary();
+        displayHistorySummary(exerciseName.value); // Update history for the current exercise
         alert('History saved manually!');
     } else {
         alert('No workout or mass logged to save.');
@@ -247,7 +285,7 @@ stopTimerBtn.addEventListener('click', function () {
             });
             localStorage.setItem('sessionData', JSON.stringify(sessionData));
             currentSession = { workout: null, totalMass: 0, startTime: null };
-            displayHistorySummary();
+            displayHistorySummary(exerciseName.value); // Update history for the current exercise
         }
     }
 });
@@ -264,120 +302,90 @@ resetTimerBtn.addEventListener('click', function () {
     currentSession = { workout: null, totalMass: 0, startTime: null };
 });
 
-// Display history summary (recent entries only)
-function displayHistorySummary() {
-    console.log('Displaying history summary (recent), workoutData:', workoutData, 'sessionData:', sessionData);
-    historySummary.innerHTML = '';
-    historyDetails.style.display = 'none';
+// Display history summary (filtered by selected exercise)
+function displayHistorySummary(selectedExercise) {
+    console.log('Displaying history summary for exercise:', selectedExercise);
+    historyTableBody.innerHTML = '';
+    pbDisplay.style.display = 'none';
     if (progressChart) {
         progressChart.destroy();
         progressChart = null;
     }
     progressChartCanvas.style.display = 'none';
 
-    // Show individual exercise logs (last 5 entries)
-    let allEntries = [];
+    if (!selectedExercise) {
+        historyTableBody.innerHTML = '<tr><td colspan="3">Select an exercise to view its history.</td></tr>';
+        return;
+    }
+
+    // Gather all entries for the selected exercise
+    let exerciseEntries = [];
     Object.keys(workoutData).forEach(workout => {
         workoutData[workout].forEach(entry => {
-            allEntries.push({ workout, ...entry });
-        });
-    });
-    allEntries.sort((a, b) => new Date(b.date) - new Date(a.date));
-    allEntries.slice(0, 5).forEach(entry => {
-        const div = document.createElement('div');
-        div.className = 'summary-item';
-        let text = `${entry.date} - ${entry.workout.charAt(0).toUpperCase() + entry.workout.slice(1)} Day: ${entry.exercise}`;
-        const totalMass = entry.sets.reduce((sum, set) => sum + set.weight * set.reps, 0);
-        text += ` - ${totalMass} kg`;
-        div.innerHTML = `<span>${text}</span>`;
-        div.addEventListener('click', () => displayHistoryDetails(entry, entry.workout));
-        historySummary.appendChild(div);
-    });
-
-    // Show session summaries (last 3 sessions)
-    if (sessionData.length > 0) {
-        sessionData.sort((a, b) => new Date(b.startTime) - new Date(a.startTime));
-        sessionData.slice(0, 3).forEach(session => {
-            const div = document.createElement('div');
-            div.className = 'summary-item';
-            const duration = `${Math.floor(session.duration / 3600)}:${String(Math.floor((session.duration % 3600) / 60)).padStart(2, '0')}:${String(session.duration % 60).padStart(2, '0')}`;
-            div.innerHTML = `<span>${session.startTime} - ${session.workout.charAt(0).toUpperCase() + session.workout.slice(1)} Day: ${session.totalMass} kg, ${duration}</span>`;
-            div.addEventListener('click', () => displayHistoryDetails(session, session.workout));
-            historySummary.appendChild(div);
-        });
-    }
-
-    if (allEntries.length === 0 && sessionData.length === 0) {
-        const noData = document.createElement('div');
-        noData.textContent = 'No recent workout history available. See full history for more.';
-        historySummary.appendChild(noData);
-    }
-}
-
-// Display detailed history and graph
-function displayHistoryDetails(data, workout) {
-    console.log('Displaying history details for:', data, 'workout:', workout);
-    historyDetails.innerHTML = '';
-    historyDetails.style.display = 'block';
-
-    let entries = [];
-    if (data.exercise) {
-        entries = [data];
-    } else {
-        entries = workoutData[workout]?.filter(entry => entry.date === data.startTime.split(',')[0]) || [];
-    }
-
-    const workoutDiv = document.createElement('div');
-    workoutDiv.innerHTML = `<h3>${workout.charAt(0).toUpperCase() + workout.slice(1)} Day</h3>`;
-    entries.forEach(entry => {
-        const div = document.createElement('div');
-        div.className = 'history-item';
-        let text = `${entry.exercise} - `;
-        entry.sets.forEach((set, i) => {
-            text += `Set ${i + 1}: ${set.weight} kg x ${set.reps} reps${i < entry.sets.length - 1 ? ', ' : ''}`;
-        });
-        div.textContent = text;
-        workoutDiv.appendChild(div);
-    });
-    historyDetails.appendChild(workoutDiv);
-
-    const progressData = {};
-    if (workoutData[workout]) {
-        workoutData[workout].forEach(entry => {
-            if (!progressData[entry.exercise]) progressData[entry.exercise] = [];
-            const maxWeight = Math.max(...entry.sets.map(set => set.weight));
-            progressData[entry.exercise].push({ date: entry.date, weight: maxWeight });
-        });
-    }
-
-    if (Object.keys(progressData).length > 0) {
-        progressChartCanvas.style.display = 'block';
-        if (progressChart) progressChart.destroy();
-
-        const datasets = Object.entries(progressData).map(([exercise, data]) => ({
-            label: exercise,
-            data: data.map(d => ({ x: d.date, y: d.weight })),
-            borderColor: `hsl(${Math.random() * 360}, 70%, 50%)`,
-            fill: false,
-            tension: 0.1
-        }));
-
-        progressChart = new Chart(progressChartCanvas, {
-            type: 'line',
-            data: { datasets },
-            options: {
-                responsive: true,
-                scales: {
-                    x: { type: 'time', time: { unit: 'day' }, title: { display: true, text: 'Date' } },
-                    y: { title: { display: true, text: 'Max Weight (kg)' } }
-                },
-                plugins: {
-                    legend: { display: true },
-                    title: { display: true, text: 'Progress Over Time' }
-                }
+            if (entry.exercise === selectedExercise) {
+                exerciseEntries.push({ workout, ...entry });
             }
         });
+    });
+
+    exerciseEntries.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+    // Display the most recent entry in the table
+    if (exerciseEntries.length > 0) {
+        const latestEntry = exerciseEntries[0];
+        const row = document.createElement('tr');
+        const setsText = latestEntry.sets.map((set, i) => `Set ${i + 1}: ${set.weight} kg x ${set.reps} reps`).join(', ');
+        const totalMass = latestEntry.sets.reduce((sum, set) => sum + set.weight * set.reps, 0);
+        row.innerHTML = `
+            <td>${latestEntry.date}</td>
+            <td>${setsText}</td>
+            <td>${totalMass}</td>
+        `;
+        historyTableBody.appendChild(row);
+
+        // Calculate and display Personal Best (highest weight)
+        const maxWeight = Math.max(...exerciseEntries.flatMap(entry => entry.sets.map(set => set.weight)));
+        if (maxWeight > 0) {
+            pbDisplay.style.display = 'block';
+            pbWeight.textContent = `${maxWeight} kg (on ${exerciseEntries.find(entry => entry.sets.some(set => set.weight === maxWeight)).date})`;
+        }
+
+        // Display progress chart
+        const progressData = {};
+        progressData[selectedExercise] = exerciseEntries.map(entry => ({
+            date: entry.date,
+            weight: Math.max(...entry.sets.map(set => set.weight))
+        }));
+
+        if (progressData[selectedExercise].length > 0) {
+            progressChartCanvas.style.display = 'block';
+            if (progressChart) progressChart.destroy();
+
+            const datasets = [{
+                label: selectedExercise,
+                data: progressData[selectedExercise].map(d => ({ x: d.date, y: d.weight })),
+                borderColor: `hsl(${Math.random() * 360}, 70%, 50%)`,
+                fill: false,
+                tension: 0.1
+            }];
+
+            progressChart = new Chart(progressChartCanvas, {
+                type: 'line',
+                data: { datasets },
+                options: {
+                    responsive: true,
+                    scales: {
+                        x: { type: 'time', time: { unit: 'day' }, title: { display: true, text: 'Date' } },
+                        y: { title: { display: true, text: 'Max Weight (kg)' } }
+                    },
+                    plugins: {
+                        legend: { display: true },
+                        title: { display: true, text: 'Progress Over Time' }
+                    }
+                }
+            });
+        }
     } else {
-        progressChartCanvas.style.display = 'none';
+        historyTableBody.innerHTML = '<tr><td colspan="3">No history available for this exercise.</td></tr>';
     }
 }
