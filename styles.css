@@ -178,3 +178,75 @@ button {
  font-size: 16px;
  border: 1px solid #ddd;
  border-radius: 4px;
+ background-color: #fafafa;
+ flex-grow: 1;
+ }
+
+ .set-input input:focus {
+ border-color: #28a745;
+ border-width: 2px;
+ outline: none;
+ }
+
+/* Set Controls */
+.set-controls {
+ display: flex;
+ gap: 10px;
+ margin-top: 10px;
+}
+
+#add-set {
+ background: linear-gradient(45deg, #17a2b8, #40c4ff);
+}
+
+ #add-set:hover {
+ background: linear-gradient(45deg, #138496, #17a2b8);
+ }
+
+#remove-set {
+ background: linear-gradient(45deg, #ff9800, #ffb300);
+}
+
+ #remove-set:hover {
+ background: linear-gradient(45deg, #f57c00, #ff9800);
+ }
+
+/* Save to History Button */
+#save-history {
+ background: linear-gradient(45deg, #007bff, #339cff);
+ margin-top: 10px;
+}
+
+ #save-history:hover {
+ background: linear-gradient(45deg, #0062cc, #007bff);
+ }
+
+/* Animation for History Items */
+@keyframes fadeIn {
+ from { opacity: 0; }
+ to { opacity: 1; }
+}
+
+/* Responsive Design */
+@media (max-width: 600px) {
+ .container {
+ margin: 20px;
+ padding: 15px;
+ }
+ .set-input {
+ flex-direction: column;
+ align-items: flex-start;
+ }
+ .history-item, .summary-item {
+ flex-direction: column;
+ align-items: flex-start;
+ gap: 5px;
+ }
+ .set-controls {
+ flex-direction: column;
+ }
+ .navbar a {
+ padding: 10px;
+ font-size: 14px;
+ }
+}
