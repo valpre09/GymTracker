@@ -131,21 +131,47 @@ button {
     margin-top: 15px;
 }
 
-.history-item, .summary-item {
-    padding: 12px;
-    border-bottom: 1px solid #eee;
-    background-color: #f9f9f9;
+#pb-display {
+    margin: 10px 0;
+    padding: 10px;
+    background-color: #e9f7ef;
     border-radius: 4px;
-    margin-bottom: 5px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    cursor: pointer;
 }
 
-    .history-item:hover, .summary-item:hover {
-        background-color: #f0f0f0;
-    }
+#pb-display h3 {
+    margin: 0 0 5px;
+    font-size: 16px;
+}
+
+#pb-weight {
+    margin: 0;
+    font-weight: bold;
+    color: #28a745;
+}
+
+/* Table Styling */
+#history-table, #full-history-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+#history-table th, #history-table td,
+#full-history-table th, #full-history-table td {
+    padding: 10px;
+    border: 1px solid #ddd;
+    text-align: left;
+}
+
+#history-table th, #full-history-table th {
+    background-color: #f9f9f9;
+    font-weight: bold;
+}
+
+#history-table tbody tr:hover,
+#full-history-table tbody tr:hover {
+    background-color: #f0f0f0;
+}
 
 /* Chart Styling */
 #progress-chart, #full-progress-chart {
@@ -173,7 +199,7 @@ button {
         width: 60px;
     }
 
-    .set-input input {
+    .set-input input[type="number"] {
         padding: 10px;
         font-size: 16px;
         border: 1px solid #ddd;
@@ -182,11 +208,23 @@ button {
         flex-grow: 1;
     }
 
-        .set-input input:focus {
+        .set-input input[type="number"]:focus {
             border-color: #28a745;
             border-width: 2px;
             outline: none;
         }
+
+    .set-input input[type="checkbox"] {
+        width: 20px;
+        height: 20px;
+        cursor: pointer;
+    }
+
+    .set-input .set-checkbox-label {
+        font-weight: normal;
+        color: #555;
+        margin-left: 5px;
+    }
 
 /* Set Controls */
 .set-controls {
@@ -237,16 +275,18 @@ button {
         flex-direction: column;
         align-items: flex-start;
     }
-    .history-item, .summary-item {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 5px;
-    }
     .set-controls {
         flex-direction: column;
     }
     .navbar a {
         padding: 10px;
         font-size: 14px;
+    }
+    #history-table, #full-history-table {
+        font-size: 14px;
+    }
+    #history-table th, #history-table td,
+    #full-history-table th, #full-history-table td {
+        padding: 8px;
     }
 }
