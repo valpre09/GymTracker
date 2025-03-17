@@ -2,7 +2,18 @@
 const defaultExerciseData = {
     chest: { exercises: ['Bench Press', 'Incline Bench Press', 'Chest Fly', 'Push-Ups'] },
     back: { exercises: ['Deadlift', 'Pull-Up', 'Bent-Over Row', 'Lat Pulldown'] },
-    legs: { exercises: ['Squat', 'Leg Press', 'Lunges', 'Leg Curl'] },
+    legs: { 
+        exercises: [
+            'Squat', 
+            'Leg Press', 
+            'Lunges', 
+            'Leg Curl', 
+            'Leg Extensions (Machine)', // Added
+            'Seated Leg Curls',        // Added
+            'Squat Barbell',           // Added
+            'Seated Calf Raises'       // Added
+        ]
+    },
     arms: { exercises: ['Bicep Curl', 'Tricep Dip', 'Hammer Curl', 'Overhead Press'] },
     core: { exercises: ['Plank', 'Russian Twist', 'Leg Raise', 'Crunches'] }
 };
