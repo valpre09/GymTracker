@@ -13,6 +13,12 @@ function displayHistorySummary() {
     console.log('Displaying full history summary, workoutData:', workoutData, 'sessionData:', sessionData);
     historyTableBody.innerHTML = '';
 
+    if (progressChart) {
+        progressChart.destroy();
+        progressChart = null;
+    }
+    progressChartCanvas.style.display = 'none';
+
     // Show individual exercise logs
     let allEntries = [];
     Object.keys(workoutData).forEach(workout => {
@@ -54,6 +60,57 @@ function displayHistorySummary() {
 
     if (allEntries.length === 0 && sessionData.length === 0) {
         historyTableBody.innerHTML = '<tr><td colspan="5">No workout history available.</td></tr>';
+    } else {
+        // Display progress chart for all exercises
+        const progressData = {};
+        allEntries.forEach(entry => {
+            if (!progressData[entry.exercise]) progressData[entry.exercise] = [];
+            const maxWeight = Math.max(...entry.sets.map(set => set.weight));
+            progressData[entry.exercise].push({ date: new Date(entry.date), weight: maxWeight });
+        });
+
+        console.log('Progress data for chart (history page):', progressData);
+
+        const datasets = Object.entries(progressData).map(([exercise, data]) => ({
+            label: exercise,
+            data: data.map(d => ({ x: d.date, y: d.weight })),
+            borderColor: `hsl(${Math.random() * 360}, 70%, 50%)`,
+            fill: false,
+            tension: 0.1
+        }));
+
+        if (datasets.some(dataset => dataset.data.length > 1)) { // Ensure at least one exercise has 2+ data points
+            progressChartCanvas.style.display = 'block';
+            progressChart = new Chart(progressChartCanvas, {
+                type: 'line',
+                data: { datasets },
+                options: {
+                    responsive: true,
+                    scales: {
+                        x: { 
+                            type: 'time',
+                            time: { 
+                                unit: 'day',
+                                parser: 'MM/DD/YYYY',
+                                displayFormats: { day: 'MM/DD/YYYY' }
+                            },
+                            title: { display: true, text: 'Date' }
+                        },
+                        y: { 
+                            title: { display: true, text: 'Max Weight (kg)' },
+                            beginAtZero: true
+                        }
+                    },
+                    plugins: {
+                        legend: { display: true },
+                        title: { display: true, text: 'Progress Over Time (All Exercises)' }
+                    }
+                }
+            });
+        } else {
+            console.log('Not enough data points to render chart on history page (need at least 2 per exercise).');
+            progressChartCanvas.style.display = 'none';
+        }
     }
 }
 
